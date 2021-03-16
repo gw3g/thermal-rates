@@ -1,2 +1,4 @@
 # thermal-rates
-Efficient numerical integration of 1↔3 and 2↔2 interaction rates
+Efficient numerical integration of interaction rates.
+
+Monte-carlo integration: [cubature](http://github.com/stevengj/cubature)
