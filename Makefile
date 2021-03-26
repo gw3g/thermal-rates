@@ -9,6 +9,6 @@ OBJ 	= $(patsubst %,$(ODIR)/%,$(_OBJ))
 $(ODIR)/%.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-run: $(OBJ)
+go: $(OBJ)
 	gcc -o $@ $^ $(CFLAGS)
 

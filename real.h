@@ -135,34 +135,46 @@ double Rate_2_to_2_tChan( double o, double k, // K = (\omega,k)
 
     double _X_ = x[0], _Y_ = x[1], _Z_ = x[2]; // integration variables
 
-    double complex t = fmax( SQR(M+M1), SQR(m1+m2) )/_X_; // (-inf,0]
+    double complex _inner(double complex t) {
 
-    double complex lam_1   = csqrt( lam(t,SQR(M ),SQR(M1)) ),
-                   lam_12  = csqrt( lam(t,SQR(m1),SQR(m2)) );
+      double complex lam_2   = csqrt( lam(t,SQR(M ),SQR(m2)) ),
+                     lam_11  = csqrt( lam(t,SQR(m1),SQR(M1)) );
 
-    double complex q0  = .5*( o*(t+SQR(M)-SQR(M1) ) + k*_Y_*(lam_1) )/SQR(M); // [q0^+,q0^0]
-    double complex q = csqrt( SQR(q0) - t );
+      double complex q0  = .5*( o*(t+SQR(M)-SQR(m2) ) + k*_Y_*(lam_2) )/SQR(M); // [q0^+,q0^0]
+      double complex q = csqrt( SQR(q0) - t );
 
-    double complex e2  = .5*( q0*(t+SQR(m2)-SQR(m1)) + q*_Z_*(lam_12) )/t,
-                   p2  = csqrt( SQR(e2) - SQR(m2) );
+      double complex e1p = .5*( q0*(t+SQR(m1)-SQR(M1)) + q*(lam_11) )/t,
+                     e1m = .5*( q0*(t+SQR(m1)-SQR(M1)) - q*(lam_11) )/t, e1, jac_e1;
 
-    double complex thermal_weight =  ( n(t1,q0-o-U1) - n(s1*s2,q0-u1-u2)  )
-                                    *( n(s2,e2-u2)       - n(s1,e2-q0+u1) );//*/
+      if (creal(t)<0.) { e1 = (e1m-1.) + 1./_Z_; jac_e1 = 1./SQR(_Z_); }
+      else { e1 = (1.-_Z_)*e1m + _Z_*e1p; jac_e1 = e1p-e1m; }
 
-    double complex jacobian =  fmax( SQR(M+M1), SQR(m1+m2) )/SQR(_X_)   // from X = [0,1]
-                              *( .5*k*lam_1/SQR(M) )        // ..   Y = [-1,1]
-                              *( .5*q*lam_12/t )          // ..   Z = [-1,1]
-                              /(2.*q)                      ;//
+      double complex p1  = csqrt( SQR(e1) - SQR(m1) );
 
-    double prefactor = .5*pow(OOFP,3.)/k;
+      double complex thermal_weight =  ( n(t1*s1,q0-u1+U1) - n(s1,q0-o+u2)  )
+                                      *( n(t1,e1-q0-U1)    - n(s1,e1-u1)    );//*/
 
-    double complex _inner = (prefactor)*(thermal_weight)*(jacobian);
+      double complex jacobian =
+                                 ( .5*k*lam_2/SQR(M) )        // ..   Y = [-1,1]
+                                *jac_e1          // ..   Z = [-1,1]
+                                /(2.*q)                      ;//
 
-    val[0] = creal(_inner); val[1] = cimag(_inner); //printf(" res = %g + I %g\n", val[0], val[1] );
+      double prefactor = .5*pow(OOFP,3.)/k;
+
+      return (prefactor)*(thermal_weight)*(jacobian);
+    }
+
+    double complex t1 = 1.-1./(1.-_X_), j1 = 1./SQR(1.-_X_); // (-inf,0]
+    double complex j2 = fmin( SQR(M-m2), SQR(m1-M1) ), t2 = j2*_X_;  // [0,min(...))
+
+    double complex _outer = _inner(t1)*j1;
+    if ((M-m2)*(m1-M1) > 0.) { _outer+=_inner(t2)*j2; }
+
+    val[0] = creal(_outer); val[1] = cimag(_outer); //printf(" res = %g + I %g\n", val[0], val[1] );
     return 0;
   }
 
-  double xl[3] = { 0., -1., -1.};
+  double xl[3] = { 0.0, -1., 0.};
   double xu[3] = { 1., +1., +1.};
 
   hcubature(2, integrand, NULL, 3, xl, xu, MaxEvls, tol, tol, ERROR_INDIVIDUAL, res, err);
@@ -223,7 +235,7 @@ double Rate_3_to_1_sChan( double o, double k, // K = (\omega,k)
   double xu[3] = { 1., +1., +1.};
 
   hcubature(2, integrand, NULL, 3, xl, xu, MaxEvls, tol, tol, ERROR_INDIVIDUAL, res, err);
-  //printf(" res = %g + I %g    ... err = %g + I %g \n", res[0], res[1], err[0], err[1] );
+  printf("S-channel!! res = %g + I %g    ... err = %g + I %g \n", res[0], res[1], err[0], err[1] );
   return res[0]; // return the real part
 }
 
@@ -278,7 +290,7 @@ double Rate_3_to_1_tChan( double o, double k, // K = (\omega,k)
   double xu[3] = { 1., +1., +1.};
 
   hcubature(2, integrand, NULL, 3, xl, xu, MaxEvls, tol, tol, ERROR_INDIVIDUAL, res, err);
-  //printf(" res = %g + I %g    ... err = %g + I %g \n", res[0], res[1], err[0], err[1] );
+  printf("T-channel!! res = %g + I %g    ... err = %g + I %g \n", res[0], res[1], err[0], err[1] );
   return res[0]; // return the real part
 }
 

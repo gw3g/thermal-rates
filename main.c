@@ -31,6 +31,13 @@ double complex calF(double complex z, double *ab) {
   return SGN(creal(z-a))/denom;
 }
 
+double complex calG(double complex z, double ad) {
+  double complex res = (.5/ad)*clog( cabs( (z+ad)/(z-ad) ) );
+  //printf("z = %g + I %g, ad = %g\n", creal(z), cimag(z), ad);
+  //printf("res = %g + I %g \n", creal(res), cimag(res));
+  return res;
+}
+
 // integrating functions:
 #include "real.h"
 #include "virt.h"
@@ -38,6 +45,7 @@ double complex calF(double complex z, double *ab) {
 //FILE *in;
 FILE *out;
 void rho_f_scan(double);   // k input
+void virtual_check(double,double,double);   // omega,k,ma input
 
 double rho_f(double o, double k, void *A_, void *B_, void *C_) {
   double K2 = SQR(o) - SQR(k);
@@ -58,17 +66,24 @@ double rho_f(double o, double k, void *A_, void *B_, void *C_) {
 
 
 int main () {
-  double aa[3] = {0.0,0.,-1.};
-  double bb[3] = {0.0,0.,-1.};
-  double cc[3] = {0.0,0.,-1.};
-  double dd[3] = {0.0,0.,-1.};
-/*
-  double ans1 = Rate_1_to_3(2.1,1.,aa,bb,cc);
-  double ans2 = Rate_2_to_2(2.1,1.,aa,bb,cc);
-  double ans3 = Rate_3_to_1(2.1,1.,aa,bb,cc);
-  printf("1 -> 3 = %g\n", ans1);
-  printf("2 -> 2 = %g\n", ans2);
-  printf("3 -> 1 = %g\n", ans3);//*/
+  double aa[3] = {1.0,0.,-1.};
+  double bb[3] = {.1,0.,-1.};
+  double cc[3] = {1.,0.,-1.};
+  double dd[3] = {0.,0.,-1.};
+
+  //double ans1 = Rate_1_to_3(2.1,1.,aa,bb,cc);
+
+  double ans2s = Rate_2_to_2_sChan(2.,.1,aa,bb,cc);
+  double ans2t = Rate_2_to_2_tChan(2.,.1,aa,bb,cc);
+
+  //double ans3s = Rate_3_to_1_sChan(2.1,1.9,aa,bb,cc);
+  //double ans3t = Rate_3_to_1_tChan(2.1,1.9,aa,bb,cc);
+
+  //printf("1 -> 3 = %g\n\n", ans1);
+  printf("2 -> 2 (s) = %g\n", ans2s);
+  printf("2 -> 2 (t) = %g\n\n", ans2t);
+  //printf("3 -> 1 (s) = %g\n", ans3s);
+  //printf("3 -> 1 (t) = %g\n", ans3t);//*/
   //
   /*
   double o = .12, ans;
@@ -78,8 +93,13 @@ int main () {
     o*=1.3;
   }//*/
 
-  double ans1 = Rate_1_to_2(2.,.1,aa,bb,cc,dd);
-    printf("omega = %g , rho_virt = %g\n", 2.1, ans1);
+  //virtual_check(2.,1.1,.1);
+  //virtual_check(2.,1.1,.01);
+  //virtual_check(2.,1.1,.001);
+  //virtual_check(2.,1.1,.0);
+
+  //double ans1 = Rate_1_to_2(2.,1.1,aa,bb,cc,dd);
+    //printf("omega = %g , rho_virt = %g\n", 2.1, ans1);
 
   //rho_f_scan(.0001);
   //rho_f_scan(.1);
@@ -101,10 +121,61 @@ int main () {
 
 /*--------------------------------------------------------------------*/
 
-void rho_f_scan(double k) {
-  double aa[3] = {0.0,0.,+1.};
-  double bb[3] = {0.0,0.,+1.};
+void virtual_check(double o, double k, double ma) {
+  double aa[3] = {ma,0.,+1.};
+  double bb[3] = {1.0,0.,+1.};
   double cc[3] = {0.0,0.,+1.};
+  double dd[3] = {0.0,0.,+1.};
+
+  int N_mb;
+  double mb, mb_min, mb_max, step;
+  double res;
+
+  char *prefix=(char*)"out/virtual_test";
+  char  suffix[20];
+  char  filename[50];
+
+  // filename
+  strcpy(filename,prefix);
+  sprintf(suffix,"{ma=%g,o=%.1f,k=%.1f}.dat",ma,o,k);
+  strcat(filename,suffix);
+  out=fopen(filename,"w");
+  //fprintf(out,"# R_pPb, z=%g, alpha=%g\n",S[2],alpha_s);
+  //fprintf(out,"# columns: y, {R1,R2,...}, R_ave\n");
+
+  // Here are some parameters that can be changed:
+  N_mb=200; 
+  mb_min=1e-6;
+  mb_max=1e-1;
+  // don't change anything after that.
+
+  mb = mb_min;
+  step=pow(mb_max/mb_min,1./(double)(N_mb-1));
+
+
+  printf(" Settings: o=%g, k=%g, with mb_min=%g, mb_max=%g\n",o,k,mb_min,mb_max); 
+  double frac;
+
+  for (int i=0; i<N_mb; i++) {
+    frac = (double)i/(double)(N_mb-1);
+
+    bb[0] = mb;
+    res = Rate_1_to_2(o,k,aa,bb,cc,dd);
+
+    //printf(" mb = %.5e , [%2.2f%]\n", mb , 100.*frac); 
+    fprintf( out, "%.8e    %.8e\n", mb, res );
+    mb *= step;
+  }
+
+  printf(" Saved to file ["); printf(filename); printf("]\n"); fclose(out);
+
+}
+
+
+void rho_f_scan(double k) {
+  double aa[3] = {0.01,0.,+1.};
+  double bb[3] = {0.1,0.,+1.};
+  double cc[3] = {1.0,0.,+1.};
 
   int N_o;
   double o, o_min, o_max, step;
