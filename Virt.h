@@ -1,5 +1,58 @@
+/*
+ *  generic code: integrate 1 -> 2 reactions
+ *
+ *  K = (\omega,k)
+ *  A_ = (m_a,\mu_a,\sig_a)
+ *  [void *] argument of func() is a list of masses.
+ *
+ */
+
 /*--------------------------------------------------------------------*/
-// 1 \to 2 reactions 
+// 1 \to 2 BORN reactions 
+
+double Phi(o,k,A_,B_,func)
+  double o,k;
+  void *A_, *B_;
+  double (*func)(double,double,double complex,void *);
+{
+  double res[2], err[2]; // reproducing eqs. (B.5)-(B.8)
+
+  double K2 = SQR(o)-SQR(k) ;
+  double mA = ((double *)A_)[0], mB = ((double *)B_)[0];
+  double uA = ((double *)A_)[1], uB = ((double *)B_)[1];
+  int    sA = ((double *)A_)[2], sB = ((double *)B_)[2];
+  double M_[2] = {mA,mB};
+
+  double complex lam_AB = csqrt( lam(K2,SQR(mA),SQR(mB)) );
+  if (fabs(cimag(lam_AB))>1e-7) { return 0.; }
+
+  int integrand(unsigned dim,  const double *x, void *data_,
+                unsigned fdim, double *val) {
+
+    double _X_ = x[0];
+    double complex eA = .5*( o*(K2+SQR(mA)-SQR(mB)) + k*_X_*lam_AB )/K2, eB = o-eA;
+    double complex thermal_weight =  ( 1. + n(sA,eA-uA) + n(sB,eB-uB) );
+    double complex jacobian = .5*k*lam_AB/K2;
+    double complex rate = func(o,k,eA,M_);
+    double prefactor = OOFP/k;
+
+    double complex _inner = (prefactor)*(thermal_weight)*(jacobian)*(rate);
+
+    val[0] = creal(_inner); val[1] = cimag(_inner);
+    //printf(" res = %g + I %g\n", val[0], val[1] );
+    return 0;
+  }
+
+  double xl[1] = { -1. };
+  double xu[1] = { +1. };
+
+  hcubature(2, integrand, NULL, 1, xl, xu, MaxEvls, tol, tol, ERROR_INDIVIDUAL, res, err);
+  return res[0];
+}
+
+
+/*--------------------------------------------------------------------*/
+// 1 \to 2 VIRTUAL reactions 
 
 double Rate_1_to_2( double o, double k, // K = (\omega,k)
                     void *A_, void *B_, void *C_, void *D_) 

@@ -417,3 +417,24 @@ double _B27_ii(double o, double k,
   }
   return creal(res);
 }
+
+/*--------------------------------------------------------------------*/
+// eq. (4.48)
+
+double _448_(double o, double k, double complex eA, void *M_)
+{
+  double mA=((double*)M_)[0], mB=((double*)M_)[1];
+  //     % = m_l              % = m_S
+
+  double complex  eB  = o - eA,
+                  K2 = SQR(o) - SQR(k), res;
+
+  // Here are the explicit integrands:
+  if (E=='K') {
+    res = - ( SQR(mB) - SQR(mA) - K2);
+  } else
+  if (E=='U') {
+    res = 2.*eA;
+  }
+  return .5*creal(res)*SGN(creal(eA*eB));
+}

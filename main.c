@@ -49,7 +49,7 @@ double complex calG(double complex z, double ad) {
 FILE *out;
 void rho_f_scan(double);   // k input
 void virtual_check(double,double,double);   // omega,k,ma input
-void Rate_fig2_scan(double); // M
+void Rate_fig2_scan(double,double,double,double); // M, ml, mQ, mS
 
 
 double rho_f(double o, double k, void *A_, void *B_, void *C_) {
@@ -72,12 +72,21 @@ double rho_f(double o, double k, void *A_, void *B_, void *C_) {
 
 int main () {
 
-  Rate_fig2_scan(3.);
+  //double m_l = .1, m_Q = .01, m_S = 1.;
+  E='U';
+  Rate_fig2_scan(3.,.1,.01,1.);
+  Rate_fig2_scan(3.,.1,.01,10.);
+  E='K';
+  Rate_fig2_scan(3.,.1,.01,1.);
+  Rate_fig2_scan(3.,.1,.01,10.);
 
   double aa[3] = {.1,0.,-1.};
   double bb[3] = {.01,0.,+1.};
   double cc[3] = {10.,0.,+1.};
   double dd[3] = {0.,0.,-1.};
+
+  //double ph = Phi(2.,1.1,aa,bb,0);
+  //printf("1 -> 2 = %g\n\n", ph);
 
   //double ans1 = Rate_1_to_3(2.1,1.,aa,bb,cc);
 
@@ -230,24 +239,26 @@ void rho_f_scan(double k) {
 }
 
 
-void Rate_fig2_scan(double M) {
+void Rate_fig2_scan(double M, double m_l, double m_Q, double m_S) {
   double g1 = 1./3., g2 = 2./3., mu_L = 1e-3, mu_B = 0., mu_Y = 2.*1e-2;
+
+  //double m_l = .1, m_Q = .01, m_S = 1.;
   double mu_l = mu_L - .5*mu_Y, mu_Q = 0, mu_S = .5*mu_Y;
-  double l_[3] = {0.10, mu_l, -1.};
-  double Q_[3] = {0.01, mu_Q, +1.};
-  double S_[3] = {1.0, mu_S, +1.};
+  double l_[3] = {m_l, mu_l, -1.};
+  double Q_[3] = {m_Q, mu_Q, +1.};
+  double S_[3] = {m_S, mu_S, +1.};
 
   int N_k;
   double o, k, k_min, k_max, step;
-  double res_1_to_3, res_2_to_2, res_3_to_1;
+  double res_1_to_2, res_1_to_3, res_2_to_2, res_3_to_1;
 
-  char *prefix=(char*)"out/rate_1to3_lQS";
-  char  suffix[20];
-  char  filename[50];
+  char *prefix=(char*)"out/rates_";
+  char  suffix[50];
+  char  filename[90];
 
   // filename
   strcpy(filename,prefix);
-  sprintf(suffix,"{M=%.1f}.dat",M);
+  sprintf(suffix,"E=%c_{ml=%.2f,mQ=%.2f,mS=%.2f,M=%.2f}.dat",E,m_l,m_Q,m_S,M);
   strcat(filename,suffix);
   out=fopen(filename,"w");
 
@@ -267,6 +278,9 @@ void Rate_fig2_scan(double M) {
   for (int i=0; i<N_k; i++) {
     frac = (double)i/(double)(N_k-1);
     o = sqrt( SQR(M) + SQR(k) );
+
+    res_1_to_2  = 0.;
+    res_1_to_2 += Phi(o,k,l_,S_,_448_);
 
     res_1_to_3  = 0.;
     res_1_to_3 += Rate_1_to_3(o,k,l_,Q_,S_,_B1_i );
@@ -296,7 +310,8 @@ void Rate_fig2_scan(double M) {
     //printf("omega = %g , rho_f = %g\n", o, ans);
 
     printf(" k = %.5e , [%2.2f%]\n", k , 100.*frac); 
-    fprintf( out, "%.8e    %.8e    %.8e    %.8e\n", k, res_1_to_3, res_2_to_2, res_3_to_1 );
+    fprintf( out, "%.8e    %.8e    %.8e    %.8e    %.8e\n", 
+                   k, res_1_to_2, res_1_to_3, res_2_to_2, res_3_to_1 );
     k += step;
   }
 
