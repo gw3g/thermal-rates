@@ -438,3 +438,129 @@ double _448_(double o, double k, double complex eA, void *M_)
   }
   return .5*creal(res)*SGN(creal(eA*eB));
 }
+
+/*--------------------------------------------------------------------*/
+// Definitions of angular ave. for virtual integrands:
+//
+
+void _virt_i(double o, double k,
+             double *PA, double *PB, double *PC, double *PD,
+             double complex *_integrands) {
+
+  double eA = PA[0], pA = PA[1], mA = PA[2],
+         eB = PB[0], pB = PB[1], mB = PB[2],
+         eC = PC[0], pC = PC[1], mC = PC[2],
+         eD = PD[0], pD = PD[1], mD = PD[2];
+
+  double K2 = SQR(o)-SQR(k);
+  double k_pD = ( o*eD + .5*(SQR(mC)-SQR(mD)-K2) );
+
+  int nn; double coeffs[4][10];
+  if (E=='K') {
+    nn = 1;
+    coeffs[0][0] = o*eA ; coeffs[0][1] = -k_pD/SQR(pD);
+    coeffs[1][0] = -o*eA; coeffs[1][1] = +k_pD/SQR(pD);
+    coeffs[2][0] = o*eD-k_pD-o*eB; coeffs[2][1] = +k_pD/SQR(pD);
+    coeffs[3][0] = o*eD-k_pD+o*eB; coeffs[3][1] = -k_pD/SQR(pD);
+  }
+  if (E=='U') {
+    nn = 0;
+    coeffs[0][0] = eA;
+    coeffs[1][0] = -eA;
+    coeffs[2][0] = eD-eB;
+    coeffs[3][0] = eD+eB;
+  }
+  double p_AD = pA*pD, p_BD = pB*pD;
+  double e_AD = eA*eD, e_BD = eB*eD;
+  double m_BAD = .5*( SQR(mB) - SQR(mA) - SQR(mD) );
+  double m_ABD = .5*( SQR(mA) - SQR(mB) - SQR(mD) );
+
+  _integrands[0] = - pA*calG(e_AD+m_BAD, p_AD, nn, coeffs[0]);
+  _integrands[1] = - pA*calG(e_AD-m_BAD, p_AD, nn, coeffs[1]);
+  _integrands[2] = - pB*calG(e_BD+m_ABD, p_BD, nn, coeffs[2]);
+  _integrands[3] = - pB*calG(e_BD-m_ABD, p_BD, nn, coeffs[3]);
+
+  //printf("pA*calG = %g\n", creal(_integrands[0]) );
+}
+
+void _virt_ii(double o, double k,
+             double *PA, double *PB, double *PC, double *PD,
+             double complex *_integrands) {
+
+  double eA = PA[0], pA = PA[1], mA = PA[2],
+         eB = PB[0], pB = PB[1], mB = PB[2],
+         eC = PC[0], pC = PC[1], mC = PC[2],
+         eD = PD[0], pD = PD[1], mD = PD[2];
+
+  double K2 = SQR(o)-SQR(k);
+  double k_pD = ( o*eD + .5*(SQR(mC)-SQR(mD)-K2) );
+
+  int nn; double coeffs[4][10];
+  if (E=='K') {
+    nn = 0;
+    coeffs[0][0] = 2.*K2-o*eD+k_pD;
+    coeffs[1][0] = 2.*K2-o*eD+k_pD;
+    coeffs[2][0] = 2.*K2-o*eD+k_pD;
+    coeffs[3][0] = 2.*K2-o*eD+k_pD;
+  }
+  if (E=='U') {
+    nn = 0;
+    coeffs[0][0] = eC+o;
+    coeffs[1][0] = eC+o;
+    coeffs[2][0] = eC+o;
+    coeffs[3][0] = eC+o;
+  }
+  double p_AD = pA*pD, p_BD = pB*pD;
+  double e_AD = eA*eD, e_BD = eB*eD;
+  double m_BAD = .5*( SQR(mB) - SQR(mA) - SQR(mD) );
+  double m_ABD = .5*( SQR(mA) - SQR(mB) - SQR(mD) );
+
+  _integrands[0] = - pA*calG(e_AD+m_BAD, p_AD, nn, coeffs[0]);
+  _integrands[1] = - pA*calG(e_AD-m_BAD, p_AD, nn, coeffs[1]);
+  _integrands[2] = - pB*calG(e_BD+m_ABD, p_BD, nn, coeffs[2]);
+  _integrands[3] = - pB*calG(e_BD-m_ABD, p_BD, nn, coeffs[3]);
+
+  //printf("pA*calG = %g\n", creal(_integrands[0]) );
+}
+
+void _virt_iii(double o, double k,
+             double *PA, double *PB, double *PC, double *PD,
+             double complex *_integrands) {
+
+  double eA = PA[0], pA = PA[1], mA = PA[2],
+         eB = PB[0], pB = PB[1], mB = PB[2],
+         eC = PC[0], pC = PC[1], mC = PC[2],
+         eD = PD[0], pD = PD[1], mD = PD[2];
+
+  double K2 = SQR(o)-SQR(k);
+  double k_pD = ( o*eD + .5*(SQR(mC)-SQR(mD)-K2) );
+
+  int nn; double coeffs[4][10];
+  if (E=='K') {
+    nn = 0;
+    coeffs[0][0] = K2-o*eD+k_pD;
+    coeffs[1][0] = K2-o*eD+k_pD;
+    coeffs[2][0] = K2-o*eD+k_pD;
+    coeffs[3][0] = K2-o*eD+k_pD;
+  }
+  if (E=='U') {
+    nn = 0;
+    coeffs[0][0] = eC;
+    coeffs[1][0] = eC;
+    coeffs[2][0] = eC;
+    coeffs[3][0] = eC;
+  }
+  double p_AD = pA*pD, p_BD = pB*pD;
+  double e_AD = eA*eD, e_BD = eB*eD;
+  double m_BAD = .5*( SQR(mB) - SQR(mA) - SQR(mD) );
+  double m_ABD = .5*( SQR(mA) - SQR(mB) - SQR(mD) );
+
+  _integrands[0] = - pA*calG(e_AD+m_BAD, p_AD, nn, coeffs[0]);
+  _integrands[1] = - pA*calG(e_AD-m_BAD, p_AD, nn, coeffs[1]);
+  _integrands[2] = - pB*calG(e_BD+m_ABD, p_BD, nn, coeffs[2]);
+  _integrands[3] = - pB*calG(e_BD-m_ABD, p_BD, nn, coeffs[3]);
+
+  //printf("pA*calG = %g\n", creal(_integrands[0]) );
+}
+
+

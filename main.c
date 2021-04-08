@@ -13,7 +13,7 @@
 
 #define SQR(x) ((x)*(x))
 #define SGN(x) (double) ((x>0)-(x<0))
-#define THE(x) (double) ((x>0))
+//#define THE(x) (double) ((x>0))
 #define OOFP 0.079577471545947667884441881686
 char E = 'U';
 
@@ -34,16 +34,38 @@ double complex calF(double complex z, double *ab) {
   return SGN(creal(z-a))/denom;
 }
 
-double complex calG(double complex z, double ad) {
+/*double complex calG(double complex z, double ad) {
   double complex res = (.5/ad)*clog( cabs( (z+ad)/(z-ad) ) );
   //printf("z = %g + I %g, ad = %g\n", creal(z), cimag(z), ad);
+  //printf("res = %g + I %g \n", creal(res), cimag(res));
+  return res;
+}//*/
+
+double complex calG(double complex z, double ad, int nn, double *coeffs) {
+  /*
+   *  reproduce Eq. (C.16) :
+   *
+   *  ad = p_a*p_d
+   *  nn = n
+   *  coeffs = {c_0,c_1,...,c_n}
+   *
+   */
+  double complex res = coeffs[nn], d[nn+1]; d[nn]=0.;
+  for (int i=nn;i>0;i--) {
+    res *= z; res += coeffs[i-1];   // construct R_n(z)
+    d[i-1] =  - coeffs[i] + z*d[i]; // populate list: {d_0,d_1,...}
+  }
+  res *= .5*clog(cabs( (z+ad)/(z-ad) ))/ad; // = R_n(z)*log(...)/(2*p_a*p_d)
+  for (int i=0;i<nn;i++) {
+   if (i%2==0) { res += d[i]*pow(ad,i)/((double)i+1.); } // term ~ (p_a*p_d)^l
+  }
   //printf("res = %g + I %g \n", creal(res), cimag(res));
   return res;
 }
 
 // integrating functions:
-#include "real.h"
-#include "virt.h"
+#include "Real.h"
+#include "Virt.h"
 
 //FILE *in;
 FILE *out;
@@ -71,6 +93,9 @@ double rho_f(double o, double k, void *A_, void *B_, void *C_) {
 
 
 int main () {
+  //double c_[4] = {.1,.3,.001,.003};
+  //double complex test = calG(1.+I*1e-5, .2, 3, c_);
+  //printf("test = %g + I %g \n\n", test);
 
   //double m_l = .1, m_Q = .01, m_S = 1.;
   E='U';
@@ -177,7 +202,7 @@ void virtual_check(double o, double k, double ma) {
     frac = (double)i/(double)(N_mb-1);
 
     bb[0] = mb;
-    res = Rate_1_to_2(o,k,aa,bb,cc,dd);
+    res = Bubble(o,k,aa,bb,cc,dd);
 
     //printf(" mb = %.5e , [%2.2f%]\n", mb , 100.*frac); 
     fprintf( out, "%.8e    %.8e\n", mb, res );
@@ -248,9 +273,14 @@ void Rate_fig2_scan(double M, double m_l, double m_Q, double m_S) {
   double Q_[3] = {m_Q, mu_Q, +1.};
   double S_[3] = {m_S, mu_S, +1.};
 
+  double dm_S = 1e-8;
+  double St_plus[3] = {m_S+dm_S, mu_S, +1.};
+  double St_minus[3] = {m_S-dm_S, mu_S, +1.};
+
   int N_k;
   double o, k, k_min, k_max, step;
   double res_1_to_2, res_1_to_3, res_2_to_2, res_3_to_1;
+  double virt;
 
   char *prefix=(char*)"out/rates_";
   char  suffix[50];
@@ -263,8 +293,8 @@ void Rate_fig2_scan(double M, double m_l, double m_Q, double m_S) {
   out=fopen(filename,"w");
 
   // Here are some parameters that can be changed:
-  N_k=20; 
-  k_min=0.1;
+  N_k=10; 
+  k_min=0.01;
   k_max=15.;
   // don't change anything after that.
 
@@ -304,14 +334,22 @@ void Rate_fig2_scan(double M, double m_l, double m_Q, double m_S) {
     res_3_to_1 += Rate_3_to_1_tChan(o,k,S_,l_,Q_,_B19_iii);
     res_3_to_1 += Rate_3_to_1_tChan(o,k,Q_,l_,S_,_B19_iii);//*/
 
+    virt  = 0.;
+    virt += Bubble(o,k,l_,Q_,l_,S_,_virt_i);
+    virt += Bubble(o,k,Q_,S_,l_,S_,_virt_ii);
+
+    virt += (m_S)*( Bubble(o,k,Q_,S_,l_,St_plus ,_virt_iii)
+                  - Bubble(o,k,Q_,S_,l_,St_minus,_virt_iii) )/(.5*dm_S);
+
     res_1_to_3 *= 2.*(SQR(g1)+3.*SQR(g2));
     res_2_to_2 *= 2.*(SQR(g1)+3.*SQR(g2));
     res_3_to_1 *= 2.*(SQR(g1)+3.*SQR(g2));
+    virt *= 2.*(SQR(g1)+3.*SQR(g2));
     //printf("omega = %g , rho_f = %g\n", o, ans);
 
     printf(" k = %.5e , [%2.2f%]\n", k , 100.*frac); 
-    fprintf( out, "%.8e    %.8e    %.8e    %.8e    %.8e\n", 
-                   k, res_1_to_2, res_1_to_3, res_2_to_2, res_3_to_1 );
+    fprintf( out, "%.8e    %.8e    %.8e    %.8e    %.8e    %.8e\n", 
+                   k, res_1_to_2, res_1_to_3, res_2_to_2, res_3_to_1, virt );
     k += step;
   }
 
