@@ -79,23 +79,6 @@
  subsequently implemented the algorithm by Gladwell to extract
  even more parallelism by evalutating many hypercubes at once.)
 
- TODO:
-
-   * Putting these routines into the GNU GSL library would be nice.
-
-   * A Python interface would be nice.  (Also a Matlab interface,
-     a GNU Octave interface, ...)
-
-   * For high-dimensional integrals, it would be nice to implement
-     a sparse-grid cubature scheme using Clenshaw-Curtis quadrature.
-     Currently, for dimensions > 7 or so, quasi Monte Carlo methods win.
-
-   * Berntsen et. al also describe a "two-level" error estimation scheme
-     that they claim makes the algorithm more robust.  It might be
-     nice to implement this, at least as an option (although I seem
-     to remember trying it once and it made the number of evaluations
-     substantially worse for my test integrands).
-
 */
 
 /* USAGE: Call cubature with your function as described in cubature.h.
