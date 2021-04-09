@@ -116,3 +116,73 @@ double Bubble(o,k,A_,B_,C_,D_,func)
 }
 
 
+double Triangle(o,k,A_,B_,C_,D_,E_,func)
+  double o,k;
+  void *A_, *B_, *C_, *D_, *E_;
+  double (*func)(double,double,double *,double *,double *,double *, double *,double complex *);
+{
+  double res[2], err[2];
+
+  double M = sqrt( SQR(o)-SQR(k) );
+  double mA = ((double *)A_)[0], mB = ((double *)B_)[0], mC = ((double *)C_)[0], mD = ((double *)D_)[0], mE = ((double *)E_)[0];
+  double uA = ((double *)A_)[1], uB = ((double *)B_)[1], uC = ((double *)C_)[1], uD = ((double *)D_)[1], uE = ((double *)E_)[1];
+  int    sA = ((double *)A_)[2], sB = ((double *)B_)[2], sC = ((double *)C_)[2], sD = ((double *)D_)[2], sE = ((double *)E_)[2];
+
+  double complex lam_DE = csqrt( lam(SQR(M),SQR(mD),SQR(mE)) );
+  if (fabs(cimag(lam_DE))>1e-7) { return 0.; }
+
+  double complex eD_p  = .5*( o*(SQR(M)+SQR(mD)-SQR(mE)) + k*(lam_DE) )/SQR(M) ;
+  double complex eD_m  = .5*( o*(SQR(M)+SQR(mD)-SQR(mE)) - k*(lam_DE) )/SQR(M) ;
+
+  int integrand(unsigned dim,  const double *x, void *data_,
+                unsigned fdim, double *val) {
+
+    double _X_ = x[0], _Y_ = x[1];// _Z_ = x[2]; // integration variables
+
+    double complex eD = (1-_X_)*eD_m + _X_*eD_p , eE = o - eD,
+                   pD = csqrt( SQR(eD) - SQR(mD) ),
+                   pE = csqrt( SQR(eE) - SQR(mE) );
+
+    double complex eA = mA + (1.-_Y_)/_Y_, pA = csqrt( SQR(eA) - SQR(mA) );
+    double complex eB = mB + (1.-_Y_)/_Y_, pB = csqrt( SQR(eB) - SQR(mB) );
+    double complex eC = mC + (1.-_Y_)/_Y_, pC = csqrt( SQR(eC) - SQR(mC) );
+
+    double PA[3] = {creal(eA),creal(pA),mA};
+    double PB[3] = {creal(eB),creal(pB),mB};
+    double PC[3] = {creal(eC),creal(pC),mC};
+    double PD[3] = {creal(eD),creal(pD),mD};
+    double PE[3] = {creal(eE),creal(pE),mE};
+
+    double complex _inner[8];
+
+    func(o,k,PA,PB,PC,PD,PE,_inner);
+
+    double complex tempA = + n(sA,eA-uA)*_inner[0] + n(sA,eA+uA)*_inner[1], // Eq.(4.24)
+                   tempB = - n(sB,eB-uB)*( _inner[2] + _inner[4] )
+                           - n(sB,eB+uB)*( _inner[3] + _inner[5] ),
+                   tempC = + n(sC,eC-uC)*_inner[6] + n(sC,eC+uC)*_inner[7];
+
+    double complex thermal_weight = 1. + n(sD,eD-uD) + n(sE,eE-uE) ;
+
+    double complex jacobian =  ( eD_p - eD_m )              // from X = [0,1]
+                              *( 1./SQR(_Y_) )              // ..   Y = [0,1]
+                              *SGN(creal(eD*eE))            ;//
+
+    double prefactor = .5*pow(OOFP,3.)/k;
+
+    double complex _outer = (prefactor)*(thermal_weight)*(jacobian)*(tempA+tempB+tempC);
+
+    val[0] = creal(_outer); val[1] = cimag(_outer);
+    //printf(" res = %g + I %g\n", val[0], val[1] );
+    return 0;
+  }
+
+  double xl[3] = { 0.,  0.};
+  double xu[3] = { 1., +1.};
+
+  hcubature(2, integrand, NULL, 2, xl, xu, MaxEvls, tol, tol, ERROR_INDIVIDUAL, res, err);
+  //printf(" res = %g + I %g    ... err = %g + I %g \n", res[0], res[1], err[0], err[1] );
+  return res[0];
+}
+
+

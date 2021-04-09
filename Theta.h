@@ -555,10 +555,72 @@ void _virt_iii(double o, double k,
   double m_BAD = .5*( SQR(mB) - SQR(mA) - SQR(mD) );
   double m_ABD = .5*( SQR(mA) - SQR(mB) - SQR(mD) );
 
-  _integrands[0] = - pA*calG(e_AD+m_BAD, p_AD, nn, coeffs[0]);
-  _integrands[1] = - pA*calG(e_AD-m_BAD, p_AD, nn, coeffs[1]);
-  _integrands[2] = - pB*calG(e_BD+m_ABD, p_BD, nn, coeffs[2]);
-  _integrands[3] = - pB*calG(e_BD-m_ABD, p_BD, nn, coeffs[3]);
+  _integrands[0] = - pA*2.*calG(e_AD+m_BAD, p_AD, nn, coeffs[0]);
+  _integrands[1] = - pA*2.*calG(e_AD-m_BAD, p_AD, nn, coeffs[1]);
+  _integrands[2] = - pB*2.*calG(e_BD+m_ABD, p_BD, nn, coeffs[2]);
+  _integrands[3] = - pB*2.*calG(e_BD-m_ABD, p_BD, nn, coeffs[3]);
+
+  //printf("pA*calG = %g\n", creal(_integrands[0]) );
+}
+
+void _virt_iv(double o, double k,
+              double *PA, double *PB, double *PC, double *PD, double *PE,
+              double complex *_integrands) {
+
+  double eA = PA[0], pA = PA[1], mA = PA[2],
+         eB = PB[0], pB = PB[1], mB = PB[2],
+         eC = PC[0], pC = PC[1], mC = PC[2],
+         eD = PD[0], pD = PD[1], mD = PD[2],
+         eE = PE[0], pE = PE[1], mE = PE[2];
+
+  double K2 = SQR(o)-SQR(k);
+  double K_PD = ( -.5*(SQR(mE)-SQR(mD)-K2) );
+  double K_PE = ( -.5*(SQR(mD)-SQR(mE)-K2) );
+
+  int nn; double coeffs[6][10];
+  if (E=='K') {
+    nn = 1;
+    coeffs[0][0] = +K_PD-3.*o*eA,       coeffs[0][1] = +3.; // for eA-integral
+    coeffs[1][0] = +K_PD+3.*o*eA,       coeffs[1][1] = -3.;
+    coeffs[2][0] = -2.*K_PD+3.*o*eB,    coeffs[2][1] = -3.; // for eB-integral
+    coeffs[3][0] = -2.*K_PD-3.*o*eB,    coeffs[3][1] = +3.;
+    coeffs[4][0] = -K_PE-2.*K2+3.*o*eC, coeffs[4][1] = -3.; // for eC-integral
+    coeffs[5][0] = -K_PE-2.*K2-3.*o*eC, coeffs[4][1] = +3.;
+  }
+  if (E=='U') {
+    nn = 0;
+    coeffs[0][0] = +eD-3.*eA; // for eA-integral
+    coeffs[1][0] = +eD+3.*eA;
+    coeffs[2][0] = +3.*eB-2.*eD; // for eB-integral
+    coeffs[3][0] = -3.*eB-2.*eD;
+    coeffs[4][0] = +3.*eC-eE-2.*o; // for eC-integral
+    coeffs[5][0] = -3.*eC-eE-2.*o;
+  }
+  double p_AD = pA*pD, p_BD = pB*pD, p_BE = pB*pE, p_CE = pC*pE;
+  double e_AD = eA*eD, e_BD = eB*eD, e_BE = eB*eE, e_CE = eC*eE;
+
+  double m_BAD = .5*( SQR(mB) - SQR(mA) - SQR(mD) );
+  double m_ABD = .5*( SQR(mA) - SQR(mB) - SQR(mD) );
+
+  double m_BCE = .5*( SQR(mB) - SQR(mC) - SQR(mE) );
+  double m_CBE = .5*( SQR(mC) - SQR(mB) - SQR(mE) );
+
+  double m_CAM = .5*( SQR(mC) - SQR(mA) - K2 );
+  double m_ACM = .5*( SQR(mA) - SQR(mC) - K2 );
+
+  double m_AECD = .5*( SQR(mA) + SQR(mE) - SQR(mC) - SQR(mD) );
+
+  _integrands[0] = - pA*calH(e_AD+m_BAD, o*eA+m_CAM,  pA, pD, pE, k, nn, coeffs[0]);
+  _integrands[1] = - pA*calH(e_AD-m_BAD, o*eA-m_CAM,  pA, pD, pE, k, nn, coeffs[1]);
+
+  _integrands[2] = - pB*calH(e_BD+m_ABD, o*eB+m_AECD, pB, pD, pE, k, nn, coeffs[2]);
+  _integrands[3] = - pB*calH(e_BD-m_ABD, o*eB-m_AECD, pB, pD, pE, k, nn, coeffs[3]);
+
+  _integrands[4] = - pB*calH(e_BE-m_CBE, o*eB+m_AECD, pB, pE, pD, k, nn, coeffs[2]);
+  _integrands[5] = - pB*calH(e_BE+m_CBE, o*eB-m_AECD, pB, pE, pD, k, nn, coeffs[3]);
+
+  _integrands[6] = - pC*calH(e_CE+m_BCE, o*eC+m_ACM,  pC, pE, pD, k, nn, coeffs[4]);
+  _integrands[7] = - pC*calH(e_CE-m_BCE, o*eC-m_ACM,  pC, pE, pD, k, nn, coeffs[5]);
 
   //printf("pA*calG = %g\n", creal(_integrands[0]) );
 }
