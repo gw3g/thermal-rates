@@ -1,4 +1,7 @@
-
+int _i   =1,  // single pole at m_l
+    _ii  =1,  // poles at m_l & m_S
+    _iii =1,  // single pole at m_S
+    _iv  =1;  // double pole at m_s
 
 double _id(double o, double k, // K = (\omega,k)
            double complex s, double complex q0, double complex e,
@@ -8,7 +11,7 @@ double _id(double o, double k, // K = (\omega,k)
 }
 
 /*--------------------------------------------------------------------*/
-// eq. (B.1)
+// eq. (B.1) 1 -> 3 reactions
 
 double _B1_i(double o, double k,
               double complex s12, double complex q0, double complex e2,
@@ -28,7 +31,7 @@ double _B1_i(double o, double k,
 
   double complex cos_qp2 = ( q0*e2 + .5*(SQR(m1)- SQR(m2) - s12 ) )/(q*p2), 
                  sin_qp2 = csqrt( 1. - SQR(cos_qp2) );
-  double complex cos_qk  = ( q0*o + .5*( SQR(m3) - K2      - s12 ) )/(q*k),
+  double complex cos_qk  = ( q0*o + .5*( SQR(m3) - K2     - s12 ) )/(q*k),
                  sin_qk  = csqrt( 1. - SQR(cos_qk ) );
 
   double a = creal(k*p2*cos_qk*cos_qp2), b = creal(k*p2*sin_qk*sin_qp2);
@@ -37,12 +40,13 @@ double _B1_i(double o, double k,
 
   // Here are the explicit integrands:
   if (E=='K') {
-    res = -.5*(  K2 - SQR(m3) + s12 + 2.*(a-o*e2) + (K2-SQR(m3))*(1.
+    res = -.5*( _i*( K2 - SQR(m3) + s12 + 2.*(a-o*e2) ) + _ii*(K2-SQR(m3))*(1.
               - (K2-.5*SQR(m3)+.5*s12-.5*SQR(ms)+.5*SQR(m1))*creal(F_) ) 
               )/(s12-SQR(ml));
   } else
   if (E=='U') {
-    res = -.5*( 2.*e1 - (K2-SQR(m3))*(e2+2.*e1)*creal(F_)
+    res = -.5*( _i*2.*e1 
+              - _ii*(K2-SQR(m3))*(e2+2.*e1)*creal(F_)
               )/(s12-SQR(ml));
   }
   return creal(res);
@@ -62,11 +66,12 @@ double _B1_ii(double o, double k,
 
   // Here are the explicit integrands:
   if (E=='K') {
-    res = -.5*(  3.*K2 + SQR(m3) - s12 - 2.*SQR(ms)
-              + 2.*SQR(ms)*( K2 + SQR(m3) - SQR(ms) )/(s12-SQR(ms)) )/(s12-SQR(ms));
+    res = -.5*( _iii*( 3.*K2 + SQR(m3) - s12 - 2.*SQR(ms) )
+              + _iv*2.*SQR(ms)*( K2 + SQR(m3) - SQR(ms) )/(s12-SQR(ms)) )/(s12-SQR(ms));
   } else
   if (E=='U') {
-    res = ( - (e3+o) - 2.*SQR(ms)*e3/(s12-SQR(ms)) )/(s12-SQR(ms));
+    res = ( - _iii*(e3+o) 
+            - _iv*2.*SQR(ms)*e3/(s12-SQR(ms)) )/(s12-SQR(ms));
   }
   return creal(res);
 }
@@ -90,9 +95,9 @@ double _45_i(double o, double k,
   double complex p1 = csqrt( SQR(e1) - SQR(m1) );
   double complex p2 = csqrt( SQR(e2) - SQR(m2) );
 
-  double complex cos_qp1 = ( q0*e1 + .5*(SQR(M1)- SQR(m1) - t ) )/(q*p1), 
+  double complex cos_qp1 = ( q0*e1 + .5*(SQR(M1) - SQR(m1) - t ) )/(q*p1), 
                  sin_qp1 = csqrt( 1. - SQR(cos_qp1) );
-  double complex cos_qk  = ( q0*o + .5*( SQR(m2) - K2 - t ) )/(q*k),
+  double complex cos_qk  = ( q0*o  + .5*( SQR(m2) - K2 - t ) )/(q*k),
                  sin_qk  = csqrt( 1. - SQR(cos_qk ) );
 
   double a = creal(k*p1*cos_qk*cos_qp1), b = creal(k*p1*sin_qk*sin_qp1);
@@ -101,12 +106,12 @@ double _45_i(double o, double k,
 
   // Here are the explicit integrands:
   if (E=='K') {
-    res = +.5*( 2.*(a-o*e1) + ( SQR(ms) - K2 )
-              - .5*( SQR(ms) - K2 )*( SQR(m2) - 2.*K2 - SQR(m1) - t + SQR(ms) )*creal(F_) 
+    res = +.5*( _i*( 2.*(a-o*e1) + ( SQR(ms) - K2 ) )
+              - _ii*.5*( SQR(ms) - K2 )*( SQR(m2) - 2.*K2 - SQR(m1) - t + SQR(ms) )*creal(F_)  // +/-t?
               )/(t-SQR(ml));
   } else
   if (E=='U') {
-    res = ( - e1 - .5*( SQR(ms)-K2 )*( E1-2.*e1 )*creal(F_) )/(t-SQR(ml));
+    res = ( - _i*e1 - _ii*.5*( SQR(ms)-K2 )*( E1-2.*e1 )*creal(F_) )/(t-SQR(ml));
   }
   return creal(res);
 }
@@ -138,12 +143,12 @@ double _45_ii(double o, double k,
 
   // Here are the explicit integrands:
   if (E=='K') {
-    res = +.5*( - K2 + SQR(m2) -t - 2.*(a-o*e1) - ( K2 - SQR(ms) )
-              + .5*( K2 - SQR(ms) )*( 2.*K2 - SQR(m2) + t + SQR(M1) - SQR(ms) )*creal(F_) 
+    res = +.5*( _i*( - K2 + SQR(m2) -t - 2.*(a-o*e1) - ( K2 - SQR(ms) ) )
+              + _ii*.5*( K2 - SQR(ms) )*( 2.*K2 - SQR(m2) + t + SQR(M1) - SQR(ms) )*creal(F_) 
               )/(t-SQR(ml));
   } else
   if (E=='U') {
-    res = ( + E1 + .5*( K2-SQR(ms) )*( e1-2.*E1 )*creal(F_) )/(t-SQR(ml));
+    res = ( + _i*E1 + _ii*.5*( K2-SQR(ms) )*( e1-2.*E1 )*creal(F_) )/(t-SQR(ml));
   }
   return creal(res);
 }
@@ -166,11 +171,11 @@ double _45_iii(double o, double k,
 
   // Here are the explicit integrands:
   if (E=='K') {
-    res = +.5*( - 2.*K2 - SQR(m2) + t + 2.*SQR(ms)
-                - 2.*SQR(ms)*( K2 + SQR(m2) - SQR(ms) )/(t-SQR(ms)) )/(t-SQR(ms));
+    res = +.5*( + _iii*( - 2.*K2 - SQR(m2) + t + 2.*SQR(ms) )
+                - _iv*2.*SQR(ms)*( K2 + SQR(m2) - SQR(ms) )/(t-SQR(ms)) )/(t-SQR(ms));
   } else
   if (E=='U') {
-    res = ( - e2 - o - 2.*SQR(ms)*e2/(t-SQR(ms)) )/(t-SQR(ms));
+    res = ( _iii*( - e2 - o) - _iv*2.*SQR(ms)*e2/(t-SQR(ms)) )/(t-SQR(ms));
   }
   return creal(res);
 }
@@ -204,12 +209,12 @@ double _B9_i(double o, double k,
 
   // Here are the explicit integrands:
   if (E=='K') {
-    res = +.5*( + 2.*(a-o*e2) - ( K2 - SQR(ms) )
-                - .5*( K2 - SQR(ms) )*( 2.*K2 - SQR(M1) + s + SQR(m2) - SQR(ms) )*creal(F_) 
+    res = +.5*( + _i*( 2.*(a-o*e2) - ( K2 - SQR(ms) ) )
+                - _ii*.5*( K2 - SQR(ms) )*( 2.*K2 - SQR(M1) + s + SQR(m2) - SQR(ms) )*creal(F_) 
               )/(s-SQR(ml));
   } else
   if (E=='U') {
-    res = ( - e2 - .5*( K2-SQR(ms) )*( e1+2.*e2 )*creal(F_) )/(s-SQR(ml));
+    res = ( - _i*e2 - _ii*.5*( K2-SQR(ms) )*( e1+2.*e2 )*creal(F_) )/(s-SQR(ml));
   }
   return creal(res);
 }
@@ -232,12 +237,12 @@ double _B9_ii(double o, double k,
 
   // Here are the explicit integrands:
   if (E=='K') {
-    res = +.5*( + s - 2.*K2 - SQR(M1)
-                + 2.*SQR(ms)*(s-K2-SQR(M1))/(s-SQR(ms))
+    res = +.5*( + _iii*( s - 2.*K2 - SQR(M1) )
+                + _iv*2.*SQR(ms)*(s-K2-SQR(M1))/(s-SQR(ms))
               )/(s-SQR(ms));
   } else
   if (E=='U') {
-    res = ( E1 - o + 2.*SQR(ms)*E1/(s-SQR(ms)) )/(s-SQR(ms));
+    res = ( _iii*( E1 - o ) + _iv*2.*SQR(ms)*E1/(s-SQR(ms)) )/(s-SQR(ms));
   }
   return creal(res);
 }
@@ -273,12 +278,12 @@ double _B19_i(double o, double k,
 
   // Here are the explicit integrands:
   if (E=='K') {
-    res = +.5*( - 2.*(a-o*E1) + ( K2-SQR(ms) )
-              + .5*( K2-SQR(ms) )*( t - SQR(M2) - SQR(M1) + SQR(ms) )*creal(F_) 
+    res = +.5*( _i*( - 2.*(a-o*E1) + ( K2-SQR(ms) ) )
+              + _ii*.5*( K2-SQR(ms) )*( t - SQR(M2) - SQR(M1) + SQR(ms) )*creal(F_) 
               )/(t-SQR(ml));
   } else
   if (E=='U') {
-    res = ( E1 + .5*( K2-SQR(ms) )*( e1-2.*E1 )*creal(F_) )/(t-SQR(ml));
+    res = ( _i*E1 + _ii*.5*( K2-SQR(ms) )*( e1-2.*E1 )*creal(F_) )/(t-SQR(ml));
   }
   return creal(res);
 }
@@ -310,12 +315,12 @@ double _B19_ii(double o, double k,
 
   // Here are the explicit integrands:
   if (E=='K') {
-    res = +.5*( SQR(M2) - K2 - t + 2.*(a-o*E1) + ( SQR(ms) - K2 )
-              - .5*( SQR(ms) - K2 )*( - t - 2.*K2 + SQR(M2) - SQR(m1) + SQR(ms) )*creal(F_) 
+    res = +.5*( _i*( SQR(M2) - K2 - t + 2.*(a-o*E1) + ( SQR(ms) - K2 ) )
+              - _ii*.5*( SQR(ms) - K2 )*( - t - 2.*K2 + SQR(M2) - SQR(m1) + SQR(ms) )*creal(F_) 
               )/(t-SQR(ml));
   } else
   if (E=='U') {
-    res = ( - e1 - .5*( SQR(ms) - K2 )*( E1-2.*e1 )*creal(F_) )/(t-SQR(ml));
+    res = ( - _i*e1 - _ii*.5*( SQR(ms) - K2 )*( E1-2.*e1 )*creal(F_) )/(t-SQR(ml));
   }
   return creal(res);
 }
@@ -338,12 +343,12 @@ double _B19_iii(double o, double k,
 
   // Here are the explicit integrands:
   if (E=='K') {
-    res = +.5*( t -2.*SQR(M2) - 2.*K2 + 2.*SQR(ms) 
-              - 2.*SQR(ms)*(K2+SQR(M2)-SQR(ms))/(t-SQR(ms))
+    res = +.5*( _iii*( t -2.*SQR(M2) - 2.*K2 + 2.*SQR(ms) )
+              - _iv*2.*SQR(ms)*(K2+SQR(M2)-SQR(ms))/(t-SQR(ms))
               )/(t-SQR(ms));
   } else
   if (E=='U') {
-    res = ( (E2-o) + 2.*SQR(ms)*E2/(t-SQR(ms)) )/(t-SQR(ms));
+    res = ( _iii*(E2-o) + _iv*2.*SQR(ms)*E2/(t-SQR(ms)) )/(t-SQR(ms));
   }
   return creal(res);
 }
@@ -380,12 +385,12 @@ double _B27_i(double o, double k,
 
   // Here are the explicit integrands:
   if (E=='K') {
-    res = -.5*( 2.*(a-o*E2) - (SQR(ms)-K2)
-              + .5*( SQR(ms)-K2 )*( 2.*K2 + SQR(M2) - SQR(m1) - SQR(ms) + s )*creal(F_) 
+    res = -.5*( _iii*( 2.*(a-o*E2) - (SQR(ms)-K2) )
+              + _ii*.5*( SQR(ms)-K2 )*( 2.*K2 + SQR(M2) - SQR(m1) - SQR(ms) + s )*creal(F_) 
               )/(s-SQR(ml));
   } else
   if (E=='U') {
-    res = ( E2 + .5*( SQR(ms) - K2 )*( E1 + 2.*E2 )*creal(F_) )/(s-SQR(ml));
+    res = ( _iii*E2 + _ii*.5*( SQR(ms) - K2 )*( E1 + 2.*E2 )*creal(F_) )/(s-SQR(ml));
   }
   return creal(res);
 }
@@ -409,11 +414,12 @@ double _B27_ii(double o, double k,
   // Here are the explicit integrands:
   if (E=='K') {
     res = -.5*( 
-        3.*K2 + SQR(m1) - s - 2.*SQR(ms) + 2.*SQR(ms)*(K2+SQR(m1)-SQR(ms))/(s-SQR(ms))
+        + _iii*( 3.*K2 + SQR(m1) - s - 2.*SQR(ms) )
+        + _iv*2.*SQR(ms)*(K2+SQR(m1)-SQR(ms))/(s-SQR(ms))
               )/(s-SQR(ms));
   } else
   if (E=='U') {
-    res = ( - (e1+o) - 2.*SQR(ms)*e1/(s-SQR(ms)) )/(s-SQR(ms));
+    res = ( - _iii*(e1+o) - _iv*2.*SQR(ms)*e1/(s-SQR(ms)) )/(s-SQR(ms));
   }
   return creal(res);
 }
@@ -475,10 +481,10 @@ void _virt_i(double o, double k,
   double m_BAD = .5*( SQR(mB) - SQR(mA) - SQR(mD) );
   double m_ABD = .5*( SQR(mA) - SQR(mB) - SQR(mD) );
 
-  _integrands[0] = - pA*calG(e_AD+m_BAD, p_AD, nn, coeffs[0]);
-  _integrands[1] = - pA*calG(e_AD-m_BAD, p_AD, nn, coeffs[1]);
-  _integrands[2] = - pB*calG(e_BD+m_ABD, p_BD, nn, coeffs[2]);
-  _integrands[3] = - pB*calG(e_BD-m_ABD, p_BD, nn, coeffs[3]);
+  _integrands[0] = pA*calG(e_AD+m_BAD, p_AD, nn, coeffs[0]);
+  _integrands[1] = pA*calG(e_AD-m_BAD, p_AD, nn, coeffs[1]);
+  _integrands[2] = pB*calG(e_BD+m_ABD, p_BD, nn, coeffs[2]);
+  _integrands[3] = pB*calG(e_BD-m_ABD, p_BD, nn, coeffs[3]);
 
   //printf("pA*calG = %g\n", creal(_integrands[0]) );
 }
@@ -515,10 +521,10 @@ void _virt_ii(double o, double k,
   double m_BAD = .5*( SQR(mB) - SQR(mA) - SQR(mD) );
   double m_ABD = .5*( SQR(mA) - SQR(mB) - SQR(mD) );
 
-  _integrands[0] = - pA*calG(e_AD+m_BAD, p_AD, nn, coeffs[0]);
-  _integrands[1] = - pA*calG(e_AD-m_BAD, p_AD, nn, coeffs[1]);
-  _integrands[2] = - pB*calG(e_BD+m_ABD, p_BD, nn, coeffs[2]);
-  _integrands[3] = - pB*calG(e_BD-m_ABD, p_BD, nn, coeffs[3]);
+  _integrands[0] = pA*calG(e_AD+m_BAD, p_AD, nn, coeffs[0]);
+  _integrands[1] = pA*calG(e_AD-m_BAD, p_AD, nn, coeffs[1]);
+  _integrands[2] = pB*calG(e_BD+m_ABD, p_BD, nn, coeffs[2]);
+  _integrands[3] = pB*calG(e_BD-m_ABD, p_BD, nn, coeffs[3]);
 
   //printf("pA*calG = %g\n", creal(_integrands[0]) );
 }
@@ -555,10 +561,10 @@ void _virt_iii(double o, double k,
   double m_BAD = .5*( SQR(mB) - SQR(mA) - SQR(mD) );
   double m_ABD = .5*( SQR(mA) - SQR(mB) - SQR(mD) );
 
-  _integrands[0] = - pA*2.*calG(e_AD+m_BAD, p_AD, nn, coeffs[0]);
-  _integrands[1] = - pA*2.*calG(e_AD-m_BAD, p_AD, nn, coeffs[1]);
-  _integrands[2] = - pB*2.*calG(e_BD+m_ABD, p_BD, nn, coeffs[2]);
-  _integrands[3] = - pB*2.*calG(e_BD-m_ABD, p_BD, nn, coeffs[3]);
+  _integrands[0] = pA*calG(e_AD+m_BAD, p_AD, nn, coeffs[0]);
+  _integrands[1] = pA*calG(e_AD-m_BAD, p_AD, nn, coeffs[1]);
+  _integrands[2] = pB*calG(e_BD+m_ABD, p_BD, nn, coeffs[2]);
+  _integrands[3] = pB*calG(e_BD-m_ABD, p_BD, nn, coeffs[3]);
 
   //printf("pA*calG = %g\n", creal(_integrands[0]) );
 }
@@ -580,21 +586,21 @@ void _virt_iv(double o, double k,
   int nn; double coeffs[6][10];
   if (E=='K') {
     nn = 1;
-    coeffs[0][0] = +K_PD-3.*o*eA,       coeffs[0][1] = +3.; // for eA-integral
-    coeffs[1][0] = +K_PD+3.*o*eA,       coeffs[1][1] = -3.;
-    coeffs[2][0] = -2.*K_PD+3.*o*eB,    coeffs[2][1] = -3.; // for eB-integral
-    coeffs[3][0] = -2.*K_PD-3.*o*eB,    coeffs[3][1] = +3.;
-    coeffs[4][0] = -K_PE-2.*K2+3.*o*eC, coeffs[4][1] = -3.; // for eC-integral
-    coeffs[5][0] = -K_PE-2.*K2-3.*o*eC, coeffs[4][1] = +3.;
+    coeffs[0][0] = +K_PD+1.*o*eA,       coeffs[0][1] = -1.; // for eA-integral
+    coeffs[1][0] = +K_PD-1.*o*eA,       coeffs[1][1] = +1.;
+    coeffs[2][0] = +2.*K_PD-1.*o*eB,    coeffs[2][1] = +1.; // for eB-integral
+    coeffs[3][0] = +2.*K_PD+1.*o*eB,    coeffs[3][1] = -1.;
+    coeffs[4][0] = -1.*K_PE+2.*K2-1.*o*eC, coeffs[4][1] = +1.; // for eC-integral
+    coeffs[5][0] = -1.*K_PE+2.*K2+1.*o*eC, coeffs[4][1] = -1.;
   }
   if (E=='U') {
     nn = 0;
-    coeffs[0][0] = +eD-3.*eA; // for eA-integral
-    coeffs[1][0] = +eD+3.*eA;
-    coeffs[2][0] = +3.*eB-2.*eD; // for eB-integral
-    coeffs[3][0] = -3.*eB-2.*eD;
-    coeffs[4][0] = +3.*eC-eE-2.*o; // for eC-integral
-    coeffs[5][0] = -3.*eC-eE-2.*o;
+    coeffs[0][0] = +eD+1.*eA; // for eA-integral
+    coeffs[1][0] = +eD-1.*eA;
+    coeffs[2][0] = -1.*eB+2.*eD; // for eB-integral
+    coeffs[3][0] = +1.*eB+2.*eD;
+    coeffs[4][0] = -1.*eC-eE+2.*o; // for eC-integral
+    coeffs[5][0] = +1.*eC-eE+2.*o;
   }
   double p_AD = pA*pD, p_BD = pB*pD, p_BE = pB*pE, p_CE = pC*pE;
   double e_AD = eA*eD, e_BD = eB*eD, e_BE = eB*eE, e_CE = eC*eE;
@@ -610,17 +616,17 @@ void _virt_iv(double o, double k,
 
   double m_AECD = .5*( SQR(mA) + SQR(mE) - SQR(mC) - SQR(mD) );
 
-  _integrands[0] = - pA*calH(e_AD+m_BAD, o*eA+m_CAM,  pA, pD, pE, k, nn, coeffs[0]);
-  _integrands[1] = - pA*calH(e_AD-m_BAD, o*eA-m_CAM,  pA, pD, pE, k, nn, coeffs[1]);
+  _integrands[0] = pA*calH(e_AD+m_BAD, o*eA+m_CAM,  pA, pD, pE, k, nn, coeffs[0]);
+  _integrands[1] = pA*calH(e_AD-m_BAD, o*eA-m_CAM,  pA, pD, pE, k, nn, coeffs[1]);
 
-  _integrands[2] = - pB*calH(e_BD+m_ABD, o*eB+m_AECD, pB, pD, pE, k, nn, coeffs[2]);
-  _integrands[3] = - pB*calH(e_BD-m_ABD, o*eB-m_AECD, pB, pD, pE, k, nn, coeffs[3]);
+  _integrands[2] = pB*calH(e_BD+m_ABD, o*eB+m_AECD, pB, pD, pE, k, nn, coeffs[2]);
+  _integrands[3] = pB*calH(e_BD-m_ABD, o*eB-m_AECD, pB, pD, pE, k, nn, coeffs[3]);
 
-  _integrands[4] = - pB*calH(e_BE-m_CBE, o*eB+m_AECD, pB, pE, pD, k, nn, coeffs[2]);
-  _integrands[5] = - pB*calH(e_BE+m_CBE, o*eB-m_AECD, pB, pE, pD, k, nn, coeffs[3]);
+  _integrands[4] = pB*calH(e_BE-m_CBE, o*eB+m_AECD, pB, pE, pD, k, nn, coeffs[2]);
+  _integrands[5] = pB*calH(e_BE+m_CBE, o*eB-m_AECD, pB, pE, pD, k, nn, coeffs[3]);
 
-  _integrands[6] = - pC*calH(e_CE+m_BCE, o*eC+m_ACM,  pC, pE, pD, k, nn, coeffs[4]);
-  _integrands[7] = - pC*calH(e_CE-m_BCE, o*eC-m_ACM,  pC, pE, pD, k, nn, coeffs[5]);
+  _integrands[6] = pC*calH(e_CE+m_BCE, o*eC+m_ACM,  pC, pE, pD, k, nn, coeffs[4]);
+  _integrands[7] = pC*calH(e_CE-m_BCE, o*eC-m_ACM,  pC, pE, pD, k, nn, coeffs[5]);
 
   //printf("pA*calG = %g\n", creal(_integrands[0]) );
 }

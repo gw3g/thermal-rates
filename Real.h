@@ -174,7 +174,7 @@ double Rate_2_to_2_tChan(o,k,A_,B_,C_,func)
       if (creal(t)<0.) { e1 = (e1m-1.) + 1./_Z_; jac_e1 = 1./SQR(_Z_); }
       else if (creal(t)>0.) { e1 = (1.-_Z_)*e1m + _Z_*e1p; jac_e1 = e1p-e1m; }
 
-      double complex thermal_weight =  ( n(t1*s1,q0-u1+U1) - n(s1,q0-o+u2)  )
+      double complex thermal_weight =  ( n(t1*s1,q0-u1+U1) - n(s2,q0-o+u2)  )
                                       *( n(t1,e1-q0-U1)    - n(s1,e1-u1)    );//*/
 
       double complex jacobian = ( .5*k*lam_2/SQR(M) )         // ..   Y = [-1,1]
