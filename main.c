@@ -149,14 +149,14 @@ int main () {
   check_ML(3.,0.96875,.1,.01,1.);
 
   //double m_l = .1, m_Q = .01, m_S = 1.;
-  /*E='U';
-  Rate_fig2_scan(3.,.1,.01,1.);
-  Rate_fig2_scan(3.,.1,.01,10.);
-  E='K';
-  Rate_fig2_scan(3.,.1,.01,1.);
-  Rate_fig2_scan(3.,.1,.01,10.);
+  //E='U';
+  //Rate_fig2_scan(3.,.1,.01,1.);
+  //Rate_fig2_scan(3.,.1,.01,10.);
+  //E='K';
+  //Rate_fig2_scan(3.,.1,.01,1.);
+  //Rate_fig2_scan(3.,.1,.01,10.);
 
-  double aa[3] = {.1,0.,-1.};
+  /*double aa[3] = {.1,0.,-1.};
   double bb[3] = {.01,0.,+1.};
   double cc[3] = {10.,0.,+1.};
   double dd[3] = {0.,0.,-1.};//*/
@@ -253,7 +253,7 @@ void virtual_check(double o, double k, double ma) {
     frac = (double)i/(double)(N_mb-1);
 
     bb[0] = mb;
-    res = Bubble(o,k,aa,bb,cc,dd);
+    res = Bubble_T(o,k,aa,bb,cc,dd);
 
     //printf(" mb = %.5e , [%2.2f%]\n", mb , 100.*frac); 
     fprintf( out, "%.8e    %.8e\n", mb, res );
@@ -355,6 +355,7 @@ void Rate_fig2_scan(double M, double m_l, double m_Q, double m_S) {
 
   printf(" Settings: M=%g, with k_min=%g, k_max=%g\n",M,k_min,k_max); 
   double frac;
+  double ccc[3];
 
   for (int i=0; i<N_k; i++) {
     frac = (double)i/(double)(N_k-1);
@@ -386,13 +387,23 @@ void Rate_fig2_scan(double M, double m_l, double m_Q, double m_S) {
     res_3_to_1 += Rate_3_to_1_tChan(o,k,Q_,l_,S_,_B19_iii);//*/
 
     res_virt  = 0.;
-    res_virt += Bubble(o,k,l_,Q_,l_,S_,_virt_i);
-    res_virt += Bubble(o,k,Q_,S_,l_,S_,_virt_ii);
+    res_virt += Bubble_T(o,k,l_,Q_,l_,S_,_virt_i);
+    res_virt += Bubble_T(o,k,Q_,S_,l_,S_,_virt_ii);
 
-    res_virt += (m_S)*( Bubble(o,k,Q_,S_,l_,St_plus ,_virt_iii)
-                  - Bubble(o,k,Q_,S_,l_,St_minus,_virt_iii) )/(.5*dm_S);
+    res_virt += (m_S)*( Bubble_T(o,k,Q_,S_,l_,St_plus ,_virt_iii)
+                      - Bubble_T(o,k,Q_,S_,l_,St_minus,_virt_iii) )/(2.*dm_S);
 
-    res_virt -= (SQR(m_S)-SQR(M))*Triangle(o,k,l_,Q_,S_,l_,S_,_virt_iv);
+    res_virt += (SQR(m_S)-SQR(M))*Triangle_T(o,k,l_,Q_,S_,l_,S_,_virt_iv);
+
+    ccc[0] = 1.; ccc[1] = 0.; ccc[2] = 0.;
+    res_virt += Bubble_0(o,k,l_,Q_,S_,l_,ccc);
+    ccc[0] = 2.; ccc[1] = 1.; ccc[2] = 0.;
+    res_virt += (SQR(m_S)-SQR(M))*Triangle_0(o,k,l_,Q_,S_,l_,S_,ccc);
+    ccc[0] = -1.; ccc[1] = -1.; ccc[2] = 2.;
+    res_virt += Bubble_0(o,k,Q_,S_,l_,S_,ccc);
+    ccc[0] = -1.; ccc[1] = -1.; ccc[2] = 1.;
+    res_virt += (m_S)*( Bubble_0(o,k,Q_,S_,l_,St_plus,ccc)
+                       - Bubble_0(o,k,Q_,S_,l_,St_minus,ccc) )/(2.*dm_S);
 
     res_1_to_3 *= 2.*(SQR(g1)+3.*SQR(g2));
     res_2_to_2 *= 2.*(SQR(g1)+3.*SQR(g2));
@@ -402,7 +413,7 @@ void Rate_fig2_scan(double M, double m_l, double m_Q, double m_S) {
 
     printf(" k = %.5e , [%2.2f%]\n", k , 100.*frac); 
     fprintf( out, "%.8e    %.8e    %.8e    %.8e    %.8e    %.8e\n", 
-                   k, res_1_to_2, res_1_to_3, res_2_to_2, res_3_to_1, res_virt/4. );
+                   k, res_1_to_2, res_1_to_3, res_2_to_2, res_3_to_1, res_virt );
     k += step;
   }
 
@@ -475,7 +486,7 @@ void check_ML(double M, double k, double m_l, double m_Q, double m_S) {
     //res_1_to_3 = Rate_1_to_3(o,k,l_,Q_,S_,_B1_i);
     printf(" 1to3 = %g \n", G12*res_1_to_3);
     printf(" 2to2 = %g \n", G12*res_2_to_2);
-    res_virt = Bubble(o,k,l_,Q_,S_,l_,_virt_i);
+    res_virt = Bubble_T(o,k,l_,Q_,S_,l_,_virt_i);
     printf(" virtual_T = %g \n", G12*res_virt);
     ccc[0] = 1.; ccc[1] = 0.; ccc[2] = 0.;
     res_virt_0 = Bubble_0(o,k,l_,Q_,S_,l_,ccc);
@@ -487,7 +498,7 @@ void check_ML(double M, double k, double m_l, double m_Q, double m_S) {
     //res_1_to_3 = Rate_1_to_3(o,k,l_,Q_,S_,_B1_i);
     printf(" 1to3 = %g \n", G12*res_1_to_3);
     printf(" 2to2 = %g \n", G12*res_2_to_2);
-    res_virt = (SQR(m_S)-SQR(M))*Triangle(o,k,l_,Q_,S_,l_,S_,_virt_iv);
+    res_virt = (SQR(m_S)-SQR(M))*Triangle_T(o,k,l_,Q_,S_,l_,S_,_virt_iv);
     printf(" virtual_T = %g \n", G12*res_virt);
     ccc[0] = 2.; ccc[1] = 1.; ccc[2] = 0.;
     res_virt_0 = (SQR(m_S)-SQR(M))*Triangle_0(o,k,l_,Q_,S_,l_,S_,ccc);
@@ -498,7 +509,7 @@ void check_ML(double M, double k, double m_l, double m_Q, double m_S) {
     do_real();
     printf(" 1to3 = %g \n", G12*res_1_to_3);
     printf(" 2to2 = %g \n", G12*res_2_to_2);
-    res_virt = Bubble(o,k,Q_,S_,l_,S_,_virt_ii);
+    res_virt = Bubble_T(o,k,Q_,S_,l_,S_,_virt_ii);
     printf(" virtual_T = %g \n", G12*res_virt);
     ccc[0] = -1.; ccc[1] = -1.; ccc[2] = 2.;
     res_virt_0 = Bubble_0(o,k,Q_,S_,l_,S_,ccc);
@@ -511,8 +522,8 @@ void check_ML(double M, double k, double m_l, double m_Q, double m_S) {
     //res_1_to_3 = Rate_1_to_3(o,k,S_,Q_,l_,_B1_ii);
     printf(" 1to3 = %g \n", G12*res_1_to_3);
     printf(" 2to2 = %g \n", G12*res_2_to_2);
-    res_virt = (m_S)*( Bubble(o,k,Q_,S_,l_,St_plus ,_virt_iii)
-                     - Bubble(o,k,Q_,S_,l_,St_minus,_virt_iii) )/(2.*dm_S);
+    res_virt = (m_S)*( Bubble_T(o,k,Q_,S_,l_,St_plus ,_virt_iii)
+                     - Bubble_T(o,k,Q_,S_,l_,St_minus,_virt_iii) )/(2.*dm_S);
     printf(" virtual_T = %g \n", G12*res_virt);
     ccc[0] = -1.; ccc[1] = -1.; ccc[2] = 1.;
     res_virt_0 = (m_S)*( Bubble_0(o,k,Q_,S_,l_,St_plus,ccc)

@@ -50,7 +50,7 @@ double Phi(o,k,A_,B_,func)
   return res[0];
 }
 
-double Bubble(o,k,A_,B_,C_,D_,func)
+double Bubble_T(o,k,A_,B_,C_,D_,func)
   double o,k;
   void *A_, *B_, *C_, *D_;
   double (*func)(double,double,double *,double *,double *,double *,double complex *);
@@ -116,7 +116,7 @@ double Bubble(o,k,A_,B_,C_,D_,func)
 }
 
 
-double Triangle(o,k,A_,B_,C_,D_,E_,func)
+double Triangle_T(o,k,A_,B_,C_,D_,E_,func)
   double o,k;
   void *A_, *B_, *C_, *D_, *E_;
   double (*func)(double,double,double *,double *,double *,double *, double *,double complex *);
@@ -168,7 +168,7 @@ double Triangle(o,k,A_,B_,C_,D_,E_,func)
                               *( 1./SQR(_Y_) )              // ..   Y = [0,1]
                               *SGN(creal(eD*eE))            ;//
 
-    double prefactor = .25*pow(OOFP,3.)/k;
+    double prefactor = -.25*pow(OOFP,3.)/k;
 
     double complex _outer = (prefactor)*(thermal_weight)*(jacobian)*(tempA+tempB+tempC);
 
@@ -337,8 +337,8 @@ double Triangle_0(o,k,A_,B_,C_,D_,E_,c)
   double complex lam_DE = csqrt( lam(SQR(M),SQR(mD),SQR(mE)) );
   if (fabs(cimag(lam_DE))>1e-7) { return 0.; }
 
-  al_b *= 1./lam_DE;
-  al_c *= 1./lam_DE;
+  al_b *= 1./SQR(lam_DE);
+  al_c *= 1./SQR(lam_DE);
 
   double complex eD_p  = .5*( o*(SQR(M)+SQR(mD)-SQR(mE)) + k*(lam_DE) )/SQR(M) ;
   double complex eD_m  = .5*( o*(SQR(M)+SQR(mD)-SQR(mE)) - k*(lam_DE) )/SQR(M) ;
@@ -371,7 +371,7 @@ double Triangle_0(o,k,A_,B_,C_,D_,E_,c)
     double complex jacobian =  ( eD_p - eD_m )              // from X = [0,1]
                               *SGN(creal(eD*eE))            ;//
 
-    double prefactor = .25*pow(OOFP,3.)/k;
+    double prefactor = -.25*pow(OOFP,3.)/k;
 
     double complex _outer = (prefactor)*(thermal_weight)*(jacobian)*(temp);
 
@@ -384,6 +384,5 @@ double Triangle_0(o,k,A_,B_,C_,D_,E_,c)
   double xu[2] = { 1. };
 
   hcubature(2, integrand, NULL, 1, xl, xu, MaxEvls, tol, tol, ERROR_INDIVIDUAL, res, err);
-  printf(" res = %g + I %g    ... err = %g + I %g \n", res[0], res[1], err[0], err[1] );
   return res[0];
 }
