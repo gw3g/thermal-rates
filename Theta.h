@@ -66,7 +66,7 @@ double _B1_ii(double o, double k,
 
   // Here are the explicit integrands:
   if (E=='K') {
-    res = -.5*( _iii*( 3.*K2 + SQR(m3) - s12 - 2.*SQR(ms) )
+    res = -.5*( _iii*( 3.*K2 + SQR(m3) - s12 ) - _iv*2.*SQR(ms) 
               + _iv*2.*SQR(ms)*( K2 + SQR(m3) - SQR(ms) )/(s12-SQR(ms)) )/(s12-SQR(ms));
   } else
   if (E=='U') {
@@ -106,7 +106,7 @@ double _45_i(double o, double k,
 
   // Here are the explicit integrands:
   if (E=='K') {
-    res = +.5*( _i*( 2.*(a-o*e1) + ( SQR(ms) - K2 ) )
+    res = +.5*( _i*( 2.*(a-o*e1) ) + _ii*( SQR(ms) - K2 ) 
               - _ii*.5*( SQR(ms) - K2 )*( SQR(m2) - 2.*K2 - SQR(m1) - t + SQR(ms) )*creal(F_)  // +/-t?
               )/(t-SQR(ml));
   } else
@@ -143,7 +143,7 @@ double _45_ii(double o, double k,
 
   // Here are the explicit integrands:
   if (E=='K') {
-    res = +.5*( _i*( - K2 + SQR(m2) -t - 2.*(a-o*e1) - ( K2 - SQR(ms) ) )
+    res = +.5*( _i*( - K2 + SQR(m2) -t - 2.*(a-o*e1) )  - _ii*( K2 - SQR(ms) )
               + _ii*.5*( K2 - SQR(ms) )*( 2.*K2 - SQR(m2) + t + SQR(M1) - SQR(ms) )*creal(F_) 
               )/(t-SQR(ml));
   } else
@@ -171,7 +171,7 @@ double _45_iii(double o, double k,
 
   // Here are the explicit integrands:
   if (E=='K') {
-    res = +.5*( + _iii*( - 2.*K2 - SQR(m2) + t + 2.*SQR(ms) )
+    res = +.5*( + _iii*( - 3.*K2 - SQR(m2) + t ) + _iv*2.*SQR(ms) 
                 - _iv*2.*SQR(ms)*( K2 + SQR(m2) - SQR(ms) )/(t-SQR(ms)) )/(t-SQR(ms));
   } else
   if (E=='U') {
@@ -209,7 +209,7 @@ double _B9_i(double o, double k,
 
   // Here are the explicit integrands:
   if (E=='K') {
-    res = +.5*( + _i*( 2.*(a-o*e2) - ( K2 - SQR(ms) ) )
+    res = +.5*( + _i*( 2.*(a-o*e2) ) - _ii*( K2 - SQR(ms) ) 
                 - _ii*.5*( K2 - SQR(ms) )*( 2.*K2 - SQR(M1) + s + SQR(m2) - SQR(ms) )*creal(F_) 
               )/(s-SQR(ml));
   } else
@@ -237,7 +237,7 @@ double _B9_ii(double o, double k,
 
   // Here are the explicit integrands:
   if (E=='K') {
-    res = +.5*( + _iii*( s - 2.*K2 - SQR(M1) )
+    res = +.5*( + _iii*( s - 3.*K2 - SQR(M1) )
                 + _iv*2.*SQR(ms)*(s-K2-SQR(M1))/(s-SQR(ms))
               )/(s-SQR(ms));
   } else

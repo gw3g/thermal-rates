@@ -1,7 +1,7 @@
 /*--------------------------------------------------------------------*/
 
-double    tol=1e-7;
-int       MaxEvls = 1e7;
+double    tol=1e-9;
+int       MaxEvls = 1e9;
 
 #include "Theta.h"
 /*
@@ -114,8 +114,8 @@ double Rate_2_to_2_sChan(o,k,A_,B_,C_,func)
 
     double complex e2  = .5*( q0*(s+SQR(m2)-SQR(m1)) + q*_Z_*(lam_12) )/s;
 
-    double complex thermal_weight =  ( n(t1,q0-o-U1) - n(s1*s2,q0-u1-u2)  )
-                                    *( n(s2,e2-u2)       - n(s1,e2-q0+u1) );//*/
+    double complex thermal_weight =  ( n(t1,q0-o-U1) - n(s1*s2,q0-u1-u2) )
+                                    *( n(s2,e2-u2)   - n(s1,e2-q0+u1)    );//*/
 
     double complex jacobian =  fmax( SQR(M+M1), SQR(m1+m2) )/SQR(_X_) // from X = [0,1]
                               *( .5*k*lam_1/SQR(M) )                  // ..   Y = [-1,1]

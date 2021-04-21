@@ -150,11 +150,11 @@ int main () {
 
   //double m_l = .1, m_Q = .01, m_S = 1.;
   //E='U';
-  //Rate_fig2_scan(3.,.1,.01,1.);
-  //Rate_fig2_scan(3.,.1,.01,10.);
+  //Rate_fig2_scan(3.,.1,.001,1.);
+  //Rate_fig2_scan(3.,.1,.001,10.);
   //E='K';
-  //Rate_fig2_scan(3.,.1,.01,1.);
-  //Rate_fig2_scan(3.,.1,.01,10.);
+  //Rate_fig2_scan(3.,.1,.001,1.);
+  //Rate_fig2_scan(3.,.1,.001,10.);
 
   /*double aa[3] = {.1,0.,-1.};
   double bb[3] = {.01,0.,+1.};
