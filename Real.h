@@ -1,7 +1,7 @@
 /*--------------------------------------------------------------------*/
 
-double    tol=1e-7;
-int       MaxEvls = 1e7;
+double    TolReal=1e-8;
+int       MaxEvls = 1e8;
 
 #include "Theta.h"
 /*
@@ -75,7 +75,7 @@ double Rate_1_to_3(o,k,A_,B_,C_,func)
   double xl[3] = { 0., -1., -1.};
   double xu[3] = { 1., +1., +1.};
 
-  hcubature(2, integrand, NULL, 3, xl, xu, MaxEvls, tol, tol, ERROR_INDIVIDUAL, res, err);
+  hcubature(2, integrand, NULL, 3, xl, xu, MaxEvls, 0, TolReal, ERROR_INDIVIDUAL, res, err);
   //printf(" res = %g + I %g    ... err = %g + I %g \n", res[0], res[1], err[0], err[1] );
   return res[0];
 }
@@ -134,7 +134,7 @@ double Rate_2_to_2_sChan(o,k,A_,B_,C_,func)
   double xl[3] = { 0., -1., -1.};
   double xu[3] = { 1., +1., +1.};
 
-  hcubature(2, integrand, NULL, 3, xl, xu, MaxEvls, tol, tol, ERROR_INDIVIDUAL, res, err);
+  hcubature(2, integrand, NULL, 3, xl, xu, MaxEvls, 0, TolReal, ERROR_INDIVIDUAL, res, err);
   //printf(" res = %g + I %g    ... err = %g + I %g \n", res[0], res[1], err[0], err[1] );
   return res[0];
 }
@@ -171,7 +171,9 @@ double Rate_2_to_2_tChan(o,k,A_,B_,C_,func)
       double complex e1p = .5*( q0*(t+SQR(m1)-SQR(M1)) + q*(lam_11) )/t,
                      e1m = .5*( q0*(t+SQR(m1)-SQR(M1)) - q*(lam_11) )/t, e1, jac_e1;
 
-      if (creal(t)<0.) { e1 = (e1m-1.) + 1./_Z_; jac_e1 = 1./SQR(_Z_); }
+      if (creal(t)<0.) { e1 = (e1m)*(1.)/_Z_; jac_e1 = e1m/SQR(_Z_); }
+      //double LAM = fmax(20.,q0+20.);
+      //if (creal(t)<0.)      { e1 = (1.-_Z_)*e1m + _Z_*LAM; jac_e1 = LAM-e1m; }
       else if (creal(t)>0.) { e1 = (1.-_Z_)*e1m + _Z_*e1p; jac_e1 = e1p-e1m; }
 
       double complex thermal_weight =  ( n(t1*s1,q0-u1+U1) - n(s2,q0-o+u2)  )
@@ -182,15 +184,18 @@ double Rate_2_to_2_tChan(o,k,A_,B_,C_,func)
                                 /(2.*q)                      ;//
 
       double prefactor = .5*pow(OOFP,3.)/k;
+      //if ((M-m2)*(m1-M1) > 0.) { printf(" YES \n" ); }
       double rate = func(o, k, t, q0, e1, M_);
 
       return (prefactor)*(thermal_weight)*(jacobian)*(rate);
     }
 
-    double complex t_1 = 1.-1./(1.-_X_), j_1 = 1./SQR(1.-_X_); // (-inf,0]
+    double complex t_1 = 1.-1./(_X_), j_1 = 1./SQR(_X_); // (-inf,0]
     double complex j_2 = fmin( SQR(M-m2), SQR(m1-M1) ), t_2 = j_2*_X_;  // [0,min(...))
+    //printf(" j_2 = %.4f, t_2 = %.4f\n",j_2, t_2);
 
     double complex _outer = _inner(t_1)*j_1; //printf("(t<0) t_1 = %g\n", t_1);
+    //if ((M-m2)*(m1-M1) > 0.) { printf("% M-m2 = %.4f and m1-M1 = %.4f\n------\n", M-m2,m1-M1); _outer+=_inner(t_2)*j_2; }//printf("(t>0) t_2 = %g\n", t_2);}
     if ((M-m2)*(m1-M1) > 0.) { _outer+=_inner(t_2)*j_2; }//printf("(t>0) t_2 = %g\n", t_2);}
 
     val[0] = creal(_outer); val[1] = cimag(_outer); //printf(" res = %g + I %g\n", val[0], val[1] );
@@ -200,7 +205,7 @@ double Rate_2_to_2_tChan(o,k,A_,B_,C_,func)
   double xl[3] = { 0., -1., 0.};
   double xu[3] = { 1., +1., +1.};
 
-  hcubature(2, integrand, NULL, 3, xl, xu, MaxEvls, tol, tol, ERROR_INDIVIDUAL, res, err);
+  hcubature(2, integrand, NULL, 3, xl, xu, MaxEvls, 0, TolReal, ERROR_INDIVIDUAL, res, err);
   //printf(" res = %g + I %g    ... err = %g + I %g \n", res[0], res[1], err[0], err[1] );
   return res[0];
 }
@@ -261,7 +266,7 @@ double Rate_3_to_1_sChan(o,k,A_,B_,C_,func)
   double xl[3] = { 0., -1., -1.};
   double xu[3] = { 1., +1., +1.};
 
-  hcubature(2, integrand, NULL, 3, xl, xu, MaxEvls, tol, tol, ERROR_INDIVIDUAL, res, err);
+  hcubature(2, integrand, NULL, 3, xl, xu, MaxEvls, 0, TolReal, ERROR_INDIVIDUAL, res, err);
   //printf("S-channel!! res = %g + I %g    ... err = %g + I %g \n", res[0], res[1], err[0], err[1] );
   return res[0]; // return the real part
 }
@@ -320,7 +325,7 @@ double Rate_3_to_1_tChan(o,k,A_,B_,C_,func)
   double xl[3] = { 0., -1., -1.};
   double xu[3] = { 1., +1., +1.};
 
-  hcubature(2, integrand, NULL, 3, xl, xu, MaxEvls, tol, tol, ERROR_INDIVIDUAL, res, err);
+  hcubature(2, integrand, NULL, 3, xl, xu, MaxEvls, 0, TolReal, ERROR_INDIVIDUAL, res, err);
   //printf("T-channel!! res = %g + I %g    ... err = %g + I %g \n", res[0], res[1], err[0], err[1] );
   return res[0]; // return the real part
 }

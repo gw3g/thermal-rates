@@ -143,7 +143,7 @@ double _45_ii(double o, double k,
 
   // Here are the explicit integrands:
   if (E=='K') {
-    res = +.5*( _i*( - K2 + SQR(m2) -t - 2.*(a-o*e1) )  - _ii*( K2 - SQR(ms) )
+    res = +.5*( _i*( - K2 + SQR(m2) - t - 2.*(a-o*e1) )  - _ii*( K2 - SQR(ms) )
               + _ii*.5*( K2 - SQR(ms) )*( 2.*K2 - SQR(m2) + t + SQR(M1) - SQR(ms) )*creal(F_) 
               )/(t-SQR(ml));
   } else
@@ -249,7 +249,7 @@ double _B9_ii(double o, double k,
 
 
 /*--------------------------------------------------------------------*/
-// eq. (B.19)
+// eq. (B.19) 3 -> 1 reactions
 
 double _B19_i(double o, double k,
               double complex t, double complex q0, double complex E1,
@@ -461,11 +461,11 @@ void _virt_i(double o, double k,
   double K2 = SQR(o)-SQR(k);
   double k_pD = ( o*eD + .5*(SQR(mC)-SQR(mD)-K2) );
 
-  int nn; double coeffs[4][10];
+  int nn; double coeffs[4][10]; // E.Pa
   if (E=='K') {
     nn = 1;
-    coeffs[0][0] = o*eA ; coeffs[0][1] = -k_pD/SQR(pD);
-    coeffs[1][0] = -o*eA; coeffs[1][1] = +k_pD/SQR(pD);
+    coeffs[0][0] = +o*eA;          coeffs[0][1] = -k_pD/SQR(pD);
+    coeffs[1][0] = -o*eA;          coeffs[1][1] = +k_pD/SQR(pD);
     coeffs[2][0] = o*eD-k_pD-o*eB; coeffs[2][1] = +k_pD/SQR(pD);
     coeffs[3][0] = o*eD-k_pD+o*eB; coeffs[3][1] = -k_pD/SQR(pD);
   }
@@ -501,7 +501,7 @@ void _virt_ii(double o, double k,
   double K2 = SQR(o)-SQR(k);
   double k_pD = ( o*eD + .5*(SQR(mC)-SQR(mD)-K2) );
 
-  int nn; double coeffs[4][10];
+  int nn; double coeffs[4][10]; // E.(Pc+K)
   if (E=='K') {
     nn = 0;
     coeffs[0][0] = 2.*K2-o*eD+k_pD;
@@ -541,7 +541,7 @@ void _virt_iii(double o, double k,
   double K2 = SQR(o)-SQR(k);
   double k_pD = ( o*eD + .5*(SQR(mC)-SQR(mD)-K2) );
 
-  int nn; double coeffs[4][10];
+  int nn; double coeffs[4][10]; // E.Pc
   if (E=='K') {
     nn = 0;
     coeffs[0][0] = K2-o*eD+k_pD;
@@ -583,23 +583,23 @@ void _virt_iv(double o, double k,
   double K_PD = ( -.5*(SQR(mE)-SQR(mD)-K2) );
   double K_PE = ( -.5*(SQR(mD)-SQR(mE)-K2) );
 
-  int nn; double coeffs[6][10];
+  int nn; double coeffs[6][10]; // E.(2*Pa+Pb) = sum: a_i (pa.k)^i
   if (E=='K') {
     nn = 1;
-    coeffs[0][0] = +K_PD+1.*o*eA,       coeffs[0][1] = -1.; // for eA-integral
-    coeffs[1][0] = +K_PD-1.*o*eA,       coeffs[1][1] = +1.;
-    coeffs[2][0] = +2.*K_PD-1.*o*eB,    coeffs[2][1] = +1.; // for eB-integral
-    coeffs[3][0] = +2.*K_PD+1.*o*eB,    coeffs[3][1] = -1.;
-    coeffs[4][0] = -1.*K_PE+2.*K2-1.*o*eC, coeffs[4][1] = +1.; // for eC-integral
-    coeffs[5][0] = -1.*K_PE+2.*K2+1.*o*eC, coeffs[4][1] = -1.;
+    coeffs[0][0] = +K_PD+1.*o*eA,          coeffs[0][1] = -1.; // for eA-integral
+    coeffs[1][0] = +K_PD-1.*o*eA,          coeffs[1][1] = +1.;
+    coeffs[2][0] = +2.*K_PD-1.*o*eB,       coeffs[2][1] = +1.; // for eB-integral
+    coeffs[3][0] = +2.*K_PD+1.*o*eB,       coeffs[3][1] = -1.;
+    coeffs[4][0] = -K_PE+2.*K2-1.*o*eC,    coeffs[4][1] = +1.; // for eC-integral
+    coeffs[5][0] = -K_PE+2.*K2+1.*o*eC,    coeffs[5][1] = -1.;
   }
   if (E=='U') {
     nn = 0;
-    coeffs[0][0] = +eD+1.*eA; // for eA-integral
+    coeffs[0][0] = +eD+1.*eA;       // for eA-integral
     coeffs[1][0] = +eD-1.*eA;
-    coeffs[2][0] = -1.*eB+2.*eD; // for eB-integral
+    coeffs[2][0] = -1.*eB+2.*eD;    // for eB-integral
     coeffs[3][0] = +1.*eB+2.*eD;
-    coeffs[4][0] = -1.*eC-eE+2.*o; // for eC-integral
+    coeffs[4][0] = -1.*eC-eE+2.*o;  // for eC-integral
     coeffs[5][0] = +1.*eC-eE+2.*o;
   }
   double p_AD = pA*pD, p_BD = pB*pD, p_BE = pB*pE, p_CE = pC*pE;
@@ -631,4 +631,273 @@ void _virt_iv(double o, double k,
   //printf("pA*calG = %g\n", creal(_integrands[0]) );
 }
 
+/*--------------------------------------------------------------------*/
+// TEST CASES: \rho_j
+
+double _j_1_3_s(double o, double k,
+                double complex s12, double complex q0, double complex e2,
+                void *M_)
+{
+  double m1=((double*)M_)[0], m2=((double*)M_)[1], m3=((double*)M_)[2];
+  //     % = m_\ell           % = m_Q              % = m_S
+
+  double complex  e1  = q0 - e2, e3 = o - q0, // resolve energies
+                  K2 = SQR(o) - SQR(k), q = csqrt( SQR(q0) - s12 ), res;
+
+  double ms = m3, ml = m1; // TODO ?
+
+  double complex p1 = csqrt( SQR(e1) - SQR(m1) );
+  double complex p2 = csqrt( SQR(e2) - SQR(m2) );
+  double complex p3 = csqrt( SQR(e3) - SQR(m3) );
+
+  double complex cos_qp2 = ( q0*e2 + .5*(SQR(m1)- SQR(m2) - s12 ) )/(q*p2), 
+                 sin_qp2 = csqrt( 1. - SQR(cos_qp2) );
+  double complex cos_qk  = ( q0*o + .5*( SQR(m3) - K2     - s12 ) )/(q*k),
+                 sin_qk  = csqrt( 1. - SQR(cos_qk ) );
+
+  double a = creal(k*p2*cos_qk*cos_qp2), b = creal(k*p2*sin_qk*sin_qp2);
+  double ab[2] = {a,b};
+  double complex F_ = calF(o*e2-.5*(SQR(ms)+s12-SQR(m1)-SQR(ms)), ab) ;
+
+  // Here are the explicit integrands:
+  res = .5*creal(F_)/(s12-SQR(ml));
+  return creal(res);
+}
+
+double _j_2_2_t1(double o, double k,
+                 double complex t, double complex q0, double complex e1,
+                 void *M_)
+{
+  double M1=((double*)M_)[0], m1=((double*)M_)[1], m2=((double*)M_)[2];
+  //     % = m_Q              % = m_l              % = m_S
+
+  double complex  E1  = e1 - q0, e2 = o - q0, // resolve energies
+                  K2 = SQR(o) - SQR(k), q = csqrt( SQR(q0) - t ), res;
+
+  double ms = m2, ml = m1; // TODO ?
+
+  double complex k1 = csqrt( SQR(E1) - SQR(M1) );
+  double complex p1 = csqrt( SQR(e1) - SQR(m1) );
+  double complex p2 = csqrt( SQR(e2) - SQR(m2) );
+
+  double complex cos_qp1 = ( q0*e1 + .5*(SQR(M1) - SQR(m1) - t ) )/(q*p1), 
+                 sin_qp1 = csqrt( 1. - SQR(cos_qp1) );
+  double complex cos_qk  = ( q0*o  + .5*( SQR(m2) - K2 - t ) )/(q*k),
+                 sin_qk  = csqrt( 1. - SQR(cos_qk ) );
+
+  double a = creal(k*p1*cos_qk*cos_qp1), b = creal(k*p1*sin_qk*sin_qp1);
+  double ab[2] = {a,b};
+  double complex F_ = calF(o*e1 + .5*(SQR(ms)-K2-SQR(m1)), ab) ;
+
+  // Here are the explicit integrands:
+  res = -.5*creal(F_)/(t-SQR(ml));
+  //printf(" t1 term = %.10f\n", t );
+  return creal(res);
+}
+
+double _j_2_2_t2(double o, double k,
+                 double complex t, double complex q0, double complex e1,
+                 void *M_)
+{
+  double M1=((double*)M_)[0], m1=((double*)M_)[1], m2=((double*)M_)[2];
+  //     % = m_l              % = m_Q              % = m_S
+
+  double complex  E1  = e1 - q0, e2 = o - q0, // resolve energies
+                  K2 = SQR(o) - SQR(k), q = csqrt( SQR(q0) - t ), res;
+
+  double ms = m2, ml = M1; // TODO ?
+
+  double complex k1 = csqrt( SQR(E1) - SQR(M1) );
+  double complex p1 = csqrt( SQR(e1) - SQR(m1) );
+  double complex p2 = csqrt( SQR(e2) - SQR(m2) );
+
+  double complex cos_qp1 = ( q0*e1 + .5*(SQR(M1)- SQR(m1) - t ) )/(q*p1), 
+                 sin_qp1 = csqrt( 1. - SQR(cos_qp1) );
+  double complex cos_qk  = ( q0*o + .5*( SQR(m2) - K2 - t ) )/(q*k),
+                 sin_qk  = csqrt( 1. - SQR(cos_qk ) );
+
+  double a = creal(k*p1*cos_qk*cos_qp1), b = creal(k*p1*sin_qk*sin_qp1);
+  double ab[2] = {a,b};
+  double complex F_ = calF(o*e1 + .5*(SQR(m2)+SQR(M1)-t-SQR(ms)), ab) ;
+
+  // Here are the explicit integrands:
+  res = .5*creal(F_)/(t-SQR(ml)+I*1e-8);
+  //printf(" res = %.10f .... F_ =%.10f \n", creal(res), creal(F_) );
+  //printf(" t = %.10f and ml^2 = %.10f \n", creal(t), SQR(ml) );
+  return creal(res);
+}
+
+
+double _j_2_2_s(double o, double k,
+                double complex s, double complex q0, double complex e2,
+                void *M_)
+{
+  double M1=((double*)M_)[0], m1=((double*)M_)[1], m2=((double*)M_)[2];
+  //     % = m_S              % = m_Q              % = m_l
+
+  double complex  e1  = q0 - e2, E1 = q0 - o, // resolve energies
+                  K2 = SQR(o) - SQR(k), q = csqrt( SQR(q0) - s ), res;
+
+  double ms = M1, ml = m2; // TODO ?
+
+  double complex k1 = csqrt( SQR(E1) - SQR(M1) );
+  double complex p1 = csqrt( SQR(e1) - SQR(m1) );
+  double complex p2 = csqrt( SQR(e2) - SQR(m2) );
+
+  double complex cos_qp2 = ( q0*e2 + .5*(SQR(m1)- SQR(m2) - s ) )/(q*p2), 
+                 sin_qp2 = csqrt( 1. - SQR(cos_qp2) );
+  double complex cos_qk  = ( q0*o + .5*( SQR(M1) - K2 - s ) )/(q*k),
+                 sin_qk  = csqrt( 1. - SQR(cos_qk ) );
+
+  double a = creal(k*p2*cos_qk*cos_qp2), b = creal(k*p2*sin_qk*sin_qp2);
+  double ab[2] = {a,b};
+  double complex F_ = calF(o*e2+.5*(SQR(ms)-K2-SQR(m2)), ab) ;
+
+  // Here are the explicit integrands:
+  res = -.5*creal(F_)/(s-SQR(ml));
+  return creal(res);
+}
+
+double _j_3_1_t1(double o, double k,
+                double complex t, double complex q0, double complex E1,
+                void *M_)
+{
+  double M1=((double*)M_)[0], M2=((double*)M_)[1], m1=((double*)M_)[2];
+  //     % = m_l              % = m_S              % = m_Q
+
+  double complex  E2  = - q0 - o, e1 = E1 - q0, // resolve energies
+                  K2 = SQR(o) - SQR(k), q = csqrt( SQR(q0) - t ), res;
+
+  double ms = M2, ml = M1; // TODO ?
+
+  double complex k1 = csqrt( SQR(E1) - SQR(M1) );
+  double complex k2 = csqrt( SQR(E2) - SQR(M2) );
+  double complex p1 = csqrt( SQR(e1) - SQR(m1) );
+
+  double complex cos_qk1 = ( q0*E1 + .5*(SQR(m1)- SQR(M1) - t ) )/(q*k1), 
+                 sin_qk1 = csqrt( 1. - SQR(cos_qk1) );
+  double complex cos_qk  = ( q0*o + .5*( t + K2 - SQR(M2) ) )/(q*k),
+                 sin_qk  = csqrt( 1. - SQR(cos_qk ) );
+
+  double a = creal(k*k1*cos_qk*cos_qk1), b = creal(k*k1*sin_qk*sin_qk1);
+  double ab[2] = {a,b};
+  double complex F_ = calF(o*E1+.5*(K2+SQR(M1)-SQR(ms)), ab) ;
+
+  // Here are the explicit integrands:
+  res = .5*creal(F_)/(t-SQR(ml));
+  return creal(res);
+}
+
+double _j_3_1_t2(double o, double k,
+               double complex t, double complex q0, double complex E1,
+               void *M_)
+{
+  double M1=((double*)M_)[0], M2=((double*)M_)[1], m1=((double*)M_)[2];
+  //     % = m_Q              % = m_S              % = m_l
+
+  double complex  E2  = - q0 - o, e1 = E1 - q0, // resolve energies
+                  K2 = SQR(o) - SQR(k), q = csqrt( SQR(q0) - t ), res;
+
+  double ms = M2, ml = m1; // TODO ?
+
+  double complex k1 = csqrt( SQR(E1) - SQR(M1) );
+  double complex k2 = csqrt( SQR(E2) - SQR(M2) );
+  double complex p1 = csqrt( SQR(e1) - SQR(m1) );
+
+  double complex cos_qk1 = ( q0*E1 + .5*(SQR(m1)- SQR(M1) - t ) )/(q*k1), 
+                 sin_qk1 = csqrt( 1. - SQR(cos_qk1) );
+  double complex cos_qk  = ( q0*o + .5*( t + K2 - SQR(M2) ) )/(q*k),
+                 sin_qk  = csqrt( 1. - SQR(cos_qk ) );
+
+  double a = creal(k*k1*cos_qk*cos_qk1), b = creal(k*k1*sin_qk*sin_qk1);
+  double ab[2] = {a,b};
+  double complex F_ = calF(o*E1+.5*(t+SQR(ms)-SQR(m1)-SQR(M2)), ab) ;
+
+  // Here are the explicit integrands:
+  res = -.5*creal(F_)/(t-SQR(ml));
+  return creal(res);
+}
+
+
+double _j_3_1_s(double o, double k,
+                double complex s, double complex q0, double complex E2,
+                void *M_)
+{
+  double M1=((double*)M_)[0], M2=((double*)M_)[1], m1=((double*)M_)[2];
+  //     % = m_Q              % = m_l              % = m_S
+
+  double complex  E1  = q0 - E2, e1 = o + q0, // resolve energies
+                  K2 = SQR(o) - SQR(k), q = csqrt( SQR(q0) - s ), res;
+
+  double ms = m1, ml = M2; // TODO ?
+
+  double complex k1 = csqrt( SQR(E1) - SQR(M1) );
+  double complex k2 = csqrt( SQR(E2) - SQR(M2) );
+  double complex p1 = csqrt( SQR(e1) - SQR(m1) );
+
+  double complex cos_qk2 = ( q0*E2 + .5*(SQR(M1)- SQR(M2) - s ) )/(q*k2), 
+                 sin_qk2 = csqrt( 1. - SQR(cos_qk2) );
+  double complex cos_qk  = ( q0*o + .5*( s + K2 - SQR(m1) ) )/(q*k),
+                 sin_qk  = csqrt( 1. - SQR(cos_qk ) );
+
+  double a = creal(k*k2*cos_qk*cos_qk2), b = creal(k*k2*sin_qk*sin_qk2);
+  double ab[2] = {a,b};
+  double complex F_ = calF(o*E2+.5*(K2+SQR(M2)-SQR(ms)), ab) ;
+
+  // Here are the explicit integrands:
+  res = .5*creal(F_)/(s-SQR(ml));
+  return creal(res);
+}
+
+void _j_virt(double o, double k,
+              double *PA, double *PB, double *PC, double *PD, double *PE,
+              double complex *_integrands) {
+
+  double eA = PA[0], pA = PA[1], mA = PA[2],
+         eB = PB[0], pB = PB[1], mB = PB[2],
+         eC = PC[0], pC = PC[1], mC = PC[2],
+         eD = PD[0], pD = PD[1], mD = PD[2],
+         eE = PE[0], pE = PE[1], mE = PE[2];
+
+  double K2 = SQR(o)-SQR(k);
+  double K_PD = ( -.5*(SQR(mE)-SQR(mD)-K2) );
+  double K_PE = ( -.5*(SQR(mD)-SQR(mE)-K2) );
+
+  int nn; double coeffs[6][10];
+  nn = 0;
+  coeffs[0][0] = 1.; // for eA-integral
+  coeffs[1][0] = 1.;
+  coeffs[2][0] = 1.; // for eB-integral
+  coeffs[3][0] = 1.;
+  coeffs[4][0] = 1.; // for eC-integral
+  coeffs[5][0] = 1.;
+
+  double p_AD = pA*pD, p_BD = pB*pD, p_BE = pB*pE, p_CE = pC*pE;
+  double e_AD = eA*eD, e_BD = eB*eD, e_BE = eB*eE, e_CE = eC*eE;
+
+  double m_BAD = .5*( SQR(mB) - SQR(mA) - SQR(mD) );
+  double m_ABD = .5*( SQR(mA) - SQR(mB) - SQR(mD) );
+
+  double m_BCE = .5*( SQR(mB) - SQR(mC) - SQR(mE) );
+  double m_CBE = .5*( SQR(mC) - SQR(mB) - SQR(mE) );
+
+  double m_CAM = .5*( SQR(mC) - SQR(mA) - K2 );
+  double m_ACM = .5*( SQR(mA) - SQR(mC) - K2 );
+
+  double m_AECD = .5*( SQR(mA) + SQR(mE) - SQR(mC) - SQR(mD) );
+
+  _integrands[0] = pA*calH(e_AD+m_BAD, o*eA+m_CAM,  pA, pD, pE, k, nn, coeffs[0]);
+  _integrands[1] = pA*calH(e_AD-m_BAD, o*eA-m_CAM,  pA, pD, pE, k, nn, coeffs[1]);
+
+  _integrands[2] = pB*calH(e_BD+m_ABD, o*eB+m_AECD, pB, pD, pE, k, nn, coeffs[2]);
+  _integrands[3] = pB*calH(e_BD-m_ABD, o*eB-m_AECD, pB, pD, pE, k, nn, coeffs[3]);
+
+  _integrands[4] = pB*calH(e_BE-m_CBE, o*eB+m_AECD, pB, pE, pD, k, nn, coeffs[2]);
+  _integrands[5] = pB*calH(e_BE+m_CBE, o*eB-m_AECD, pB, pE, pD, k, nn, coeffs[3]);
+
+  _integrands[6] = pC*calH(e_CE+m_BCE, o*eC+m_ACM,  pC, pE, pD, k, nn, coeffs[4]);
+  _integrands[7] = pC*calH(e_CE-m_BCE, o*eC-m_ACM,  pC, pE, pD, k, nn, coeffs[5]);
+
+  //printf("pA*calG = %g\n", creal(_integrands[0]) );
+}
 
