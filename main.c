@@ -14,6 +14,7 @@
 #define SQR(x) ((x)*(x))
 #define SGN(x) (double) ((x>0)-(x<0))
 #define OOFP 0.079577471545947667884441881686
+#define ZE2  1.644934066848226436472415166646
 
 double mubar = 6.283185307179586476925286766559;
 
@@ -181,7 +182,9 @@ double rho_j_virt(double M, double k, double m_l, double m_Q, double m_S) {
 
 
 
+void test_C0();
 int main () {
+  //test_C0();
   //double c_[4] = {.1,.3,.001,.003};
   //double complex test = calG(1.+I*1e-5, .2, 3, c_);
   //printf("test = %g + I %g \n\n", test);
@@ -193,11 +196,11 @@ int main () {
   E='U';
   //Rate_fig2_scan(3.,.1,.01,1.); // l,Q,S
   //Rate_fig2_scan(3.,.1,.01,10.);
-  Rate_fig2_scan(.3,.1,.01,1.);
+  //Rate_fig2_scan(.3,.1,.01,1.);
   E='K';
   //Rate_fig2_scan(3.,.1,.01,1.);
   //Rate_fig2_scan(3.,.1,.01,10.);
-  //Rate_fig2_scan(.3,.1,.01,1.);//*/
+  Rate_fig2_scan(.3,.1,.01,1.);//*/
 
   /*double aa[3] = {.1,0.,-1.};
   double bb[3] = {.01,0.,+1.};
@@ -491,7 +494,7 @@ void Rate_fig2_scan(double M, double m_l, double m_Q, double m_S) {
   out=fopen(filename,"w");
 
   // Here are some parameters that can be changed:
-  N_k=20; 
+  N_k=100; 
   k_min=0.001;
   k_max=15.;
   // don't change anything after that.
@@ -550,7 +553,7 @@ void Rate_fig2_scan(double M, double m_l, double m_Q, double m_S) {
     res_virt += Bubble_0(o,k,Q_,S_,l_,S_,ccc);
     ccc[0] = -1.; ccc[1] = -1.; ccc[2] = 1.;
     res_virt += (m_S)*( Bubble_0(o,k,Q_,S_,l_,St_plus,ccc)
-                       - Bubble_0(o,k,Q_,S_,l_,St_minus,ccc) )/(2.*dm_S);
+                      - Bubble_0(o,k,Q_,S_,l_,St_minus,ccc) )/(2.*dm_S);
 
     tot = res_1_to_3+res_2_to_2+res_3_to_1+res_virt;
     res_1_to_3 *= G12;//2.*(SQR(g1)+3.*SQR(g2));
@@ -696,4 +699,52 @@ void check_ML(double M, double k, double m_l, double m_Q, double m_S) {
 
 }
 
+void test_C0() {
+  int nn = 100;
+  E = 'U';
+  double M, ma, mb, mc, md, me; // ml, mQ, mS, ml, mS
+  double M_i[6] = {.1e+3, .1e-2, .1e-2, .1e-1, .1e-2, .1e-1};
+  double M_f[6] = {3.,    .1,    .01, .1e+1, .1,    .1e+1};
+  double M_step[6];
 
+  for (int i=0;i<6;i++) { M_step[i] = (M_f[i]-M_i[i])/((double)nn-1); }
+  M  = M_i[0];
+  ma = M_i[1];
+  mb = M_i[2];
+  mc = M_i[3];
+  md = M_i[4];
+  me = M_i[5];
+  double ccc[3] = {1.,0.,1.};
+  double g1 = 1./3., g2 = 2./3., mu_L = 1e-3, mu_B = 0., mu_Y = 2.*1e-2;
+  double G12 = 2.*(SQR(g1)+3.*SQR(g2));
+
+  //double m_l = .1, m_Q = .01, m_S = 1.;
+  double mu_l = mu_L - .5*mu_Y, mu_Q = 0., mu_S = .5*mu_Y;
+  double l_[3] = {0., mu_l, -1.};
+  double Q_[3] = {0., mu_Q, +1.};
+  double S_[3] = {0., mu_S, +1.};
+  double o, k =1.;
+  double C0_new, C0_old;
+
+
+  for (int i=0;i<nn;i++) {
+    //l_[0] = ma;
+    //Q_[0] = mb;
+    //S_[0] = mc;
+    //o = sqrt(M*M+k*k);
+    //C0 = G12*(SQR(mc)-SQR(M))*Triangle_0(o,k,l_,Q_,S_,l_,S_,ccc)/o;
+    //C0 = Triangle_0(o,k,l_,Q_,S_,l_,S_,ccc)/o;
+    C0_old = L3(SQR(M),SQR(ma),SQR(mb),SQR(mc),SQR(md),SQR(me))*SQR(OOFP);
+    C0_new = L3_new(SQR(M),SQR(ma),SQR(mb),SQR(mc),SQR(md),SQR(me))*SQR(OOFP);
+
+    printf("%.8e   %.8e   %.8e   %.8e   %.8e   %.8e   %.8e   %.8e\n",
+            md,me,M,ma,mb,mc,C0_new,C0_old);
+    M  += M_step[0];
+    ma += M_step[1];
+    mb += M_step[2];
+    mc += M_step[3];
+    md += M_step[4];
+    me += M_step[5];
+
+  }
+}

@@ -203,6 +203,36 @@ double Triangle_T(o,k,A_,B_,C_,D_,E_,func)
 /*--------------------------------------------------------------------*/
 // Vacuum functions
 
+double Li2(double x) { // Real part only, for x>1
+  double omx = 1.-x;
+  if (x<-1.)         return +Li2(1./omx)-log(omx)*log(-x)+.5*SQR(log(omx))-ZE2;
+  if (-1.<x && x<0.) return -Li2(-x/omx)-.5*SQR(log(omx));
+  if ( .5<x && x<1.) return -Li2(omx)-log(omx)*log(x)+ZE2;
+  if ( 1.<x && x<2.) return +Li2(-omx/x)-log(-omx)*log(x)+.5*SQR(log(x))+ZE2;
+  if (x>2.)          return -Li2(1./x)-.5*SQR(log(x))+.5*ZE2;
+
+  double tmp = 0.0, i = 1.0;
+  for (; i < 50.; i += 1.0) { tmp += pow(x,i)/SQR(i); }
+  return tmp;
+}//*/
+
+double R(double y0, double y1) {
+  double omy0 = 1.-y0, omy1 = 1.-y1, y1my0=y1-y0;
+  double complex tmp = Li2(-omy1/y1my0) - Li2(y1/y1my0)
+                     + clog(omy0/y1my0)*clog(-omy1/y1my0)
+                     - clog(-y0/y1my0)*clog(y1/y1my0);
+  return creal(tmp);
+}
+
+double S3(double y0, double a, double b, double c) {
+  double D = SQR(b)-4.*a*c;
+  double y1 = creal( .5*(-b-csqrt(D))/a ),
+         y2 = creal( .5*(-b+csqrt(D))/a );
+  
+  return creal( R(y0,y1) + R(y0,y2) );
+}
+
+
 double L1(double M2) {
   return -M2*( log(fabs(SQR(mubar)/M2)) + 1. );
 }
@@ -213,10 +243,10 @@ double L2(double M2a, double M2b, double M2d) {
   //if (sqrt(M2d)>sqrt(M2a)+sqrt(M2b)) {
   double complex lam_ABD = csqrt( lam(M2a,M2b,M2d) );
 
-    double x_plus  = fmin( fmax( .5*(M2b+M2d-M2a+creal(lam_ABD))/M2d, 0. ), 1.),
-           x_minus = fmin( fmax( .5*(M2b+M2d-M2a-creal(lam_ABD))/M2d, 0. ), 1.);
+    //double x_plus  = fmin( fmax( .5*(M2b+M2d-M2a+creal(lam_ABD))/M2d, 0. ), 1.),
+           //x_minus = fmin( fmax( .5*(M2b+M2d-M2a-creal(lam_ABD))/M2d, 0. ), 1.);
 
-    int integrand(unsigned dim,  const double *x, void *data_,
+    /*int integrand(unsigned dim,  const double *x, void *data_,
                   unsigned fdim, double *val) {
       double _X_ = x[0]*x_minus,
              _Y_ = (1.-x[0])*x_minus + x[0]*x_plus,
@@ -237,12 +267,18 @@ double L2(double M2a, double M2b, double M2d) {
     }//*/
   //}
 
-  double xl[1] = { 0. };
-  double xu[1] = { 1. };
+  //double xl[1] = { 0. };
+  //double xu[1] = { 1. };
 
-  hcubature(1, integrand, NULL, 1, xl, xu, MaxEvls, 1e-10, 0, ERROR_INDIVIDUAL, res, err);
-  return -res[0];
+  //hcubature(1, integrand, NULL, 1, xl, xu, MaxEvls, 1e-10, 0, ERROR_INDIVIDUAL, res, err);
+  //return -res[0];
+    double complex x1 = .5*(M2b+M2d-M2a+creal(lam_ABD))/M2d,
+                   x2 = .5*(M2b+M2d-M2a-creal(lam_ABD))/M2d;
+  return - log(fabs(SQR(mubar)/M2d)) 
+    + creal( clog(1.-x1)-x1*clog((x1-1.)/x1)-1.)
+    + creal( clog(1.-x2)-x2*clog((x2-1.)/x2)-1.);
 }
+
 
 double L3(double K2,
           double M2a, double M2b, double M2c, double M2d, double M2e) {
@@ -265,7 +301,54 @@ double L3(double K2,
 
   hcubature(1, integrand, NULL, 1, xl, xu, MaxEvls, 1e-10, 0, ERROR_INDIVIDUAL, res, err);
   return res[0];
-}
+}//*/
+
+
+double L3_new(double K2,
+          double M2a, double M2b, double M2c, double M2d, double M2e) {
+  double res[1], err[1];
+  double a = M2e, b = M2d, c = K2-M2d-M2e, d = M2b-M2c-M2e, e = M2a-M2b+M2e-K2, f = M2c;
+  double complex lam_DE = csqrt( lam(M2d,M2e,K2) );
+
+  double al = creal( .5*( M2d+M2e-K2 + lam_DE )/M2d );
+
+  double y0 = - (d+e*al)/(c+2.*b*al),
+                 y1 = y0 + al,
+                 y2 = y0/(1.-al),
+                 y3 = -y0/al;
+
+  double tmp = 
+  + S3(y1,b,c+e,a+d+f)
+  - S3(y2,a+b+c,d+e,f)
+  + S3(y3,a,d,f);
+  //printf(" res = %g \n", tmp/(c+2.*b*al) );
+  return ( tmp/(c+2.*b*al) );
+/*
+  double D1 = b*y1*y1 + (c+e)*y1+(a+d+f),
+         D2 = (a+b+c)*y2*y2 + (d+e)*y2 + f,
+         D3 = a*y3*y3 + d*y3 + f;
+
+  int integrand(unsigned dim,  const double *x, void *data_,
+                unsigned fdim, double *val) {
+    double _Y_ = x[0];
+
+    double complex N1 = b*SQR(_Y_) + (c+e)*_Y_+(a+d+f),
+                   N2 = (a+b+c)*SQR(_Y_) + (d+e)*_Y_ + f,
+                   N3 = a*SQR(_Y_) + d*_Y_ + f;
+
+    double complex tmp = log(fabs(N1/D1))/(_Y_-y1) - log(fabs(N2/D2))/(_Y_-y2) + clog(fabs(N3/D3))/(_Y_-y3);
+    val[0] = creal(tmp);
+    return 0;
+  }
+
+  double xl[1] = { 0. };
+  double xu[1] = { 1. };
+
+  hcubature(1, integrand, NULL, 1, xl, xu, MaxEvls, 1e-6, 0, ERROR_INDIVIDUAL, res, err);//*/
+  //printf(" res = %g \n", res[0]/(c+2.*b*al) );
+  //return creal( res[0]/(c+2.*b*al) );
+}//*/
+
 
 
 double Bubble_0(o,k,A_,B_,C_,D_,c)
