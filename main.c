@@ -21,14 +21,27 @@ double mubar = 6.283185307179586476925286766559;
 char E = 'U';
 
 void check_ML(double,double,double,double,double);
-
 double complex lam(double complex x, double complex y, double complex z) {
   double complex res = SQR(x) + SQR(y) + SQR(z) - 2.*( x*y + x*z + y*z );
   return res;
 }
 double complex n(int s, double complex x) {
-  double complex denom = cexp(x) - ((double complex) s);
-  return ((double complex) s)/denom;
+  //if (creal(x)<0.) { return -1.-n(s,-x); }
+  double complex e = cexp(-x);
+  double complex denom = 1. - ((double complex) s)*e;
+  return e*((double complex) s)/denom;
+}
+
+double complex calN(int sA, int sB,
+                    double complex xA, double complex xB) {
+
+  double pA = SGN(creal(xA));
+  double pB = SGN(creal(xB));
+
+  if ((pA>0)&&(pB>0)) return + 1.+ n(sA,+xA) + n(sB,+xB);
+  if ((pA<0)&&(pB>0)) return     - n(sA,-xA) + n(sB,+xB);
+  if ((pA>0)&&(pB<0)) return     + n(sA,+xA) - n(sB,-xB);
+  if ((pA<0)&&(pB<0)) return - 1.- n(sA,-xA) - n(sB,-xB);
 }
 
 double complex calF(double complex z, double *ab) {
@@ -109,6 +122,7 @@ FILE *out;
 void rho_f_scan(double);   // k input
 void virtual_check(double,double,double);   // omega,k,ma input
 void Rate_fig2_scan(double,double,double,double); // M, ml, mQ, mS
+void M_scan(double,double,double,double); // k, ml, mQ, mS
 
 // integrating functions:
 #include "Real.h"
@@ -168,6 +182,13 @@ double rho_j_virt(double M, double k, double m_l, double m_Q, double m_S) {
   ccc[0] = 1.; ccc[1] = 0.; ccc[2] = 1.;
   E = 'K';
 
+  // CHECK (1/2+n) -> 1/2
+  //double temp1 = Triangle_0(o,k,l_,Q_,S_,l_,S_,ccc)/SQR(M); //*/
+  //double temp2 = Triangle_0_new(o,k,l_,Q_,S_,l_,S_,_j_virt); //*/
+  //printf(" temp1 = %.8f \n", temp1);
+  //printf(" temp2 = %.8f \n", temp2);
+  //return 0.;
+
   double res = 
      Triangle_T(o,k,l_,Q_,S_,l_,S_,_j_virt) 
    + Triangle_0(o,k,l_,Q_,S_,l_,S_,ccc)/SQR(M) //*/
@@ -184,11 +205,13 @@ double rho_j_virt(double M, double k, double m_l, double m_Q, double m_S) {
 
 void test_C0();
 int main () {
+  //rho_j_virt(3.,1.,.1,.01,.4);
   //test_C0();
   //double c_[4] = {.1,.3,.001,.003};
   //double complex test = calG(1.+I*1e-5, .2, 3, c_);
   //printf("test = %g + I %g \n\n", test);
   E='K';
+  M_scan(1.,.1,.01,.4);
   //check_ML(3.,0.96875,.1,.01,1.);
   //rho_j_scan1();
 
@@ -200,7 +223,7 @@ int main () {
   E='K';
   //Rate_fig2_scan(3.,.1,.01,1.);
   //Rate_fig2_scan(3.,.1,.01,10.);
-  Rate_fig2_scan(.3,.1,.01,1.);//*/
+  //Rate_fig2_scan(.3,.1,.01,1.);//*/
 
   /*double aa[3] = {.1,0.,-1.};
   double bb[3] = {.01,0.,+1.};
@@ -494,9 +517,9 @@ void Rate_fig2_scan(double M, double m_l, double m_Q, double m_S) {
   out=fopen(filename,"w");
 
   // Here are some parameters that can be changed:
-  N_k=100; 
+  N_k=10; 
   k_min=0.001;
-  k_max=15.;
+  k_max=2.;
   // don't change anything after that.
 
   k = k_min;
@@ -747,4 +770,123 @@ void test_C0() {
     me += M_step[5];
 
   }
+}
+
+void M_scan(double k, double m_l, double m_Q, double m_S) {
+  double g1 = 1./3., g2 = 2./3., mu_L = 1e-3, mu_Y = 2.*1e-2;
+  double G12 = 2.*(SQR(g1)+3.*SQR(g2));
+
+  //double m_l = .1, m_Q = .01, m_S = 1.;
+  double mu_l = mu_L - .5*mu_Y, mu_Q = 0, mu_S = .5*mu_Y;
+  double l_[3] = {m_l, mu_l, -1.};
+  double Q_[3] = {m_Q, mu_Q, +1.};
+  double S_[3] = {m_S, mu_S, +1.};
+  double mlT = (1.+SQR(mu_l/M_PI))*G12/(32.); mlT = sqrt(mlT);
+
+  double dm_S = 1e-7;
+  double St_plus[3]  = {m_S+dm_S, mu_S, +1.};
+  double St_minus[3] = {m_S-dm_S, mu_S, +1.};
+
+  int N_M;
+  double o, M, M_min, M_max, step;
+  double res_1_to_2, res_1_to_3, res_2_to_2, res_3_to_1, tot;
+  double res_virt;
+
+  char *prefix=(char*)"out/M_scan_";
+  char  suffix[50];
+  char  filename[90];
+
+  //printf( "2to2, HTL = %.8f\n", Rate_2_to_2_HTL(2.01,2.0,l_,S_,mlT) );
+
+  // filename
+  strcpy(filename,prefix);
+  sprintf(suffix,"E=%c_{ml=%.2f,mQ=%.3f,mS=%.2f,k=%.2f}.dat",E,m_l,m_Q,m_S,k);
+  strcat(filename,suffix);
+  out=fopen(filename,"w");
+
+  // Here are some parameters that can be changed:
+  N_M=10; 
+  M_min=0.01;
+  M_max=.10;
+  // don't change anything after that.
+
+  M = M_min;
+  step=pow(M_max/M_min,1./(N_M-1));
+
+
+  printf(" Settings: k=%g, with M_min=%g, M_max=%g\n",k,M_min,M_max); 
+  double frac;
+  double ccc[3];
+
+  for (int i=0; i<N_M; i++) {
+    frac = (double)i/(double)(N_M-1);
+    o = sqrt( SQR(M) + SQR(k) );
+
+    //res_1_to_2  = 0.;
+    //res_1_to_2 += Phi(o,k,l_,S_,_448_);
+
+    res_1_to_3  = 0.;
+    res_1_to_3 += Rate_1_to_3(o,k,l_,Q_,S_,_B1_i );
+    res_1_to_3 += Rate_1_to_3(o,k,S_,Q_,l_,_B1_ii);//*/
+
+    res_2_to_2  = 0.;
+    res_2_to_2 += Rate_2_to_2_tChan(o,k,Q_,l_,S_,_45_i  );
+    res_2_to_2 += Rate_2_to_2_tChan(o,k,l_,Q_,S_,_45_ii );
+    res_2_to_2 += Rate_2_to_2_tChan(o,k,Q_,S_,l_,_45_iii);
+    res_2_to_2 += Rate_2_to_2_tChan(o,k,S_,Q_,l_,_45_iii);
+
+    res_2_to_2 += Rate_2_to_2_sChan(o,k,S_,Q_,l_,_B9_i);
+    res_2_to_2 += Rate_2_to_2_sChan(o,k,l_,Q_,S_,_B9_ii);//*/
+
+    res_3_to_1  = 0.;
+    res_3_to_1 += Rate_3_to_1_sChan(o,k,Q_,l_,S_,_B27_i );
+    res_3_to_1 += Rate_3_to_1_sChan(o,k,Q_,S_,l_,_B27_ii);
+
+    res_3_to_1 += Rate_3_to_1_tChan(o,k,l_,S_,Q_,_B19_i );
+    res_3_to_1 += Rate_3_to_1_tChan(o,k,Q_,S_,l_,_B19_ii);
+    res_3_to_1 += Rate_3_to_1_tChan(o,k,S_,l_,Q_,_B19_iii);
+    res_3_to_1 += Rate_3_to_1_tChan(o,k,Q_,l_,S_,_B19_iii);//*/
+
+    res_virt  = 0.;
+    res_virt += Bubble_T(o,k,l_,Q_,S_,l_,_virt_i);
+    res_virt += Bubble_T(o,k,Q_,S_,l_,S_,_virt_ii);
+
+    res_virt += (m_S)*( Bubble_T(o,k,Q_,S_,l_,St_plus ,_virt_iii)
+                      - Bubble_T(o,k,Q_,S_,l_,St_minus,_virt_iii) )/(2.*dm_S);
+
+    res_virt += (SQR(m_S)-SQR(M))*Triangle_T(o,k,l_,Q_,S_,l_,S_,_virt_iv);
+
+    ccc[0] = 1.; ccc[1] = 0.; ccc[2] = 0.;
+    res_virt += Bubble_0(o,k,l_,Q_,S_,l_,ccc);
+    ccc[0] = 2.; ccc[1] = 1.; ccc[2] = 0.;
+    res_virt += (SQR(m_S)-SQR(M))*Triangle_0(o,k,l_,Q_,S_,l_,S_,ccc);
+    ccc[0] = -1.; ccc[1] = -1.; ccc[2] = 2.;
+    res_virt += Bubble_0(o,k,Q_,S_,l_,S_,ccc);
+    ccc[0] = -1.; ccc[1] = -1.; ccc[2] = 1.;
+    res_virt += (m_S)*( Bubble_0(o,k,Q_,S_,l_,St_plus,ccc)
+                      - Bubble_0(o,k,Q_,S_,l_,St_minus,ccc) )/(2.*dm_S);//*/
+
+    //res_2_to_2 += Rate_2_to_2_HTL(o,k,l_,S_,mlT);
+    res_1_to_2  = Rate_1_to_2_HTL(o,k,l_,S_,mlT);
+    res_1_to_2 += Rate_2_to_2_HTL(o,k,l_,S_,mlT);
+
+    //tot = res_1_to_3+res_2_to_2+res_3_to_1+res_virt + Rate_1_to_2_HTL(o,k,l_,S_,mlT);
+    res_1_to_3 *= G12;//2.*(SQR(g1)+3.*SQR(g2));
+    res_2_to_2 *= G12;//2.*(SQR(g1)+3.*SQR(g2));
+    res_3_to_1 *= G12;//2.*(SQR(g1)+3.*SQR(g2));
+    res_virt   *= G12;//2.*(SQR(g1)+3.*SQR(g2));
+    tot = res_1_to_3 + res_2_to_2 + res_3_to_1 + res_1_to_2;
+    //tot *= G12;
+    //printf("omega = %g , rho_f = %g\n", o, ans);
+
+    printf(" o = %.5e , [%2.2f%]\n", o , 100.*frac); 
+    //fprintf( out, "%.10e    %.10e    %.10e    %.10e    %.10e    %.10e    %.10e\n", 
+    //               M, res_1_to_2, res_1_to_3, res_2_to_2, res_3_to_1, res_virt, tot );
+    fprintf( out, "%.10e    %.10e    %.10e    %.10e    %.10e    %.10e\n", 
+                   M, res_1_to_2, res_1_to_3, res_2_to_2, res_3_to_1, tot );
+    M *= step;
+  }
+
+  printf(" Saved to file ["); printf(filename); printf("]\n"); fclose(out);
+
 }

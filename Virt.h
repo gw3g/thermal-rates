@@ -32,7 +32,8 @@ double Phi(o,k,A_,B_,func)
 
     double _X_ = x[0];
     double complex eA = .5*( o*(K2+SQR(mA)-SQR(mB)) + k*_X_*lam_AB )/K2, eB = o-eA;
-    double complex thermal_weight =  ( 1. + n(sA,eA-uA) + n(sB,eB-uB) );
+    //double complex thermal_weight =  ( 1. + n(sA,eA-uA) + n(sB,eB-uB) );
+    double complex thermal_weight =  calN(sA,sB,eA-uA,eB-uB);
     double complex jacobian = .5*k*lam_AB/K2;
     double complex rate = func(o,k,eA,M_);
     double prefactor = OOFP/k;
@@ -100,7 +101,8 @@ double Bubble_T(o,k,A_,B_,C_,D_,func)
     double complex tempA = n(sA,eA-uA)*_inner[0] - n(sA,eA+uA)*_inner[1], // Eq.(4.25)
                    tempB = n(sB,eB-uB)*_inner[2] - n(sB,eB+uB)*_inner[3];
 
-    double complex thermal_weight = 1. + n(sC,eC-uC) + n(sD,eD-uD) ;
+    //double complex thermal_weight = 1. + n(sC,eC-uC) + n(sD,eD-uD) ;
+    double complex thermal_weight = calN(sC,sD,eC-uC,eD-uD);
 
     double complex jacobian =  ( eC_p - eC_m )              // from X = [0,1]
                               *( 1./SQR(_Y_) )              // ..   Y = [0,1]
@@ -176,7 +178,8 @@ double Triangle_T(o,k,A_,B_,C_,D_,E_,func)
                            - n(sB,eB+uB)*( _inner[3] + _inner[5] ),
                    tempC = + n(sC,eC-uC)*_inner[6] + n(sC,eC+uC)*_inner[7];
 
-    double complex thermal_weight = 1. + n(sD,eD-uD) + n(sE,eE-uE) ;
+    //double complex thermal_weight = 1. + n(sD,eD-uD) + n(sE,eE-uE) ;
+    double complex thermal_weight = calN(sD,sE,eD-uD,eE-uE);
 
     double complex jacobian =  ( eD_p - eD_m )              // from X = [0,1]
                               *( 1./SQR(_Y_) )              // ..   Y = [0,1]
@@ -199,11 +202,86 @@ double Triangle_T(o,k,A_,B_,C_,D_,E_,func)
   return res[0];
 }
 
+// TEST!
+double Triangle_0_new(o,k,A_,B_,C_,D_,E_,func)
+  double o,k;
+  void *A_, *B_, *C_, *D_, *E_;
+  double (*func)(double,double,double *,double *,double *,double *, double *,double complex *);
+{
+  double res[2], err[2]; // eq.(2.36)
+
+  double K2 = SQR(o)-SQR(k);
+  double mA = ((double *)A_)[0], mB = ((double *)B_)[0],
+         mC = ((double *)C_)[0], mD = ((double *)D_)[0], mE = ((double *)E_)[0];
+  double uA = ((double *)A_)[1], uB = ((double *)B_)[1],
+         uC = ((double *)C_)[1], uD = ((double *)D_)[1], uE = ((double *)E_)[1];
+  int    sA = ((double *)A_)[2], sB = ((double *)B_)[2],
+         sC = ((double *)C_)[2], sD = ((double *)D_)[2], sE = ((double *)E_)[2];
+
+  double complex lam_DE = csqrt( lam(K2,SQR(mD),SQR(mE)) );
+
+  if (fabs(cimag(lam_DE))>0.) { return 0.; } // catch boundary cases
+
+  double complex eD_p  = .5*( o*(K2+SQR(mD)-SQR(mE)) + k*(lam_DE) )/K2 ,
+                 eD_m  = .5*( o*(K2+SQR(mD)-SQR(mE)) - k*(lam_DE) )/K2 ;
+
+  int integrand(unsigned dim,  const double *x, void *data_,
+                unsigned fdim, double *val) {
+
+    double _X_ = x[0], _Y_ = x[1]; // integration variables
+
+    double complex eD = (1-_X_)*eD_m + _X_*eD_p , eE = o - eD,
+                   pD = csqrt( SQR(eD) - SQR(mD) ),
+                   pE = csqrt( SQR(eE) - SQR(mE) );
+
+    double complex eA = mA + (1.-_Y_)/_Y_, pA = csqrt( SQR(eA) - SQR(mA) );
+    double complex eB = mB + (1.-_Y_)/_Y_, pB = csqrt( SQR(eB) - SQR(mB) );
+    double complex eC = mC + (1.-_Y_)/_Y_, pC = csqrt( SQR(eC) - SQR(mC) );
+
+    double PA[3] = {creal(eA),creal(pA),mA};
+    double PB[3] = {creal(eB),creal(pB),mB};
+    double PC[3] = {creal(eC),creal(pC),mC};
+    double PD[3] = {creal(eD),creal(pD),mD};
+    double PE[3] = {creal(eE),creal(pE),mE};
+
+    double complex _inner[8];
+
+    func(o,k,PA,PB,PC,PD,PE,_inner);
+
+    double complex tempA = + _inner[0] + _inner[1], // Eq.(4.24)
+                   tempB = - ( _inner[2] + _inner[4] )
+                           - ( _inner[3] + _inner[5] ),
+                   tempC = + _inner[6] + _inner[7];
+
+    //double complex thermal_weight = 1. + n(sD,eD-uD) + n(sE,eE-uE) ;
+    double complex thermal_weight = calN(sD,sE,eD-uD,eE-uE);
+
+    double complex jacobian =  ( eD_p - eD_m )              // from X = [0,1]
+                              *( 1./SQR(_Y_) )              // ..   Y = [0,1]
+                              *SGN(creal(eD*eE))           ;//
+
+    double prefactor = -.25*pow(OOFP,3.)/k;
+
+    double complex _outer = .5*(prefactor)*(thermal_weight)*(jacobian)*(tempA+tempB+tempC);
+
+    val[0] = creal(_outer); val[1] = cimag(_outer);
+    //printf(" res = %g + I %g\n", val[0], val[1] );
+    return 0;
+  }
+
+  double xl[2] = { 0., 0.};
+  double xu[2] = { 1., 1.};
+
+  hcubature(2, integrand, NULL, 2, xl, xu, MaxEvls, TolVirt, 0, ERROR_INDIVIDUAL, res, err);
+  //printf(" res = %g + I %g    ... err = %g + I %g \n", res[0], res[1], err[0], err[1] );
+  return res[0];
+}
+
 
 /*--------------------------------------------------------------------*/
 // Vacuum functions
 
-double Li2(double x) { // Real part only, for x>1
+/*double Li2(double x) { // Real part only, for x>1
   double omx = 1.-x;
   if (x<-1.)         return +Li2(1./omx)-log(omx)*log(-x)+.5*SQR(log(omx))-ZE2;
   if (-1.<x && x<0.) return -Li2(-x/omx)-.5*SQR(log(omx));
@@ -216,20 +294,74 @@ double Li2(double x) { // Real part only, for x>1
   return tmp;
 }//*/
 
-double R(double y0, double y1) {
-  double omy0 = 1.-y0, omy1 = 1.-y1, y1my0=y1-y0;
-  double complex tmp = Li2(-omy1/y1my0) - Li2(y1/y1my0)
-                     + clog(omy0/y1my0)*clog(-omy1/y1my0)
-                     - clog(-y0/y1my0)*clog(y1/y1my0);
-  return creal(tmp);
+double GRID[16][2] = { // Gaussian-quadrature: 16-pt [-1,1]
+                       {0.1894506104550685,-0.0950125098376374},
+                       {0.1894506104550685,+0.0950125098376374},
+                       {0.1826034150449236,-0.2816035507792589},
+                       {0.1826034150449236,+0.2816035507792589},
+                       {0.1691565193950025,-0.4580167776572274},
+                       {0.1691565193950025,+0.4580167776572274},
+                       {0.1495959888165767,-0.6178762444026438},
+                       {0.1495959888165767,+0.6178762444026438},
+                       {0.1246289712555339,-0.7554044083550030},
+                       {0.1246289712555339,+0.7554044083550030},
+                       {0.0951585116824928,-0.8656312023878318},
+                       {0.0951585116824928,+0.8656312023878318},
+                       {0.0622535239386479,-0.9445750230732326},
+                       {0.0622535239386479,+0.9445750230732326},
+                       {0.0271524594117541,-0.9894009349916499},
+                       {0.0271524594117541,+0.9894009349916499}
+                     };
+
+
+double complex Li2(double complex z) { // Osacar, Palacian & Palacios (1995)
+  double r = cabs(z);
+  double complex omz = 1.-z, res;
+  //printf( " z = %g + I %g \n", z);
+  if (cabs(omz)<1e-8) return ZE2;
+  if        (r<.5) { // circle
+    res = 0.;
+    for (int i=1;i<30;i++) {
+      res += cpow(z,i)/SQR(i*(i+1.)*(i+2.));
+    }
+    res *= 4.*SQR(z);
+    res += 4.*z + 5.75*SQR(z) + 3.*(1.-SQR(z))*clog(omz);
+    return res/(SQR(z)+4.*z+1.);
+  } else if (r<1.) { // crown
+    if (cabs(omz)<.5) {
+      return - Li2(omz) - clog(z)*clog(omz) + ZE2;
+    } else {
+      res = 0.;
+      double ai, ti;
+      for (int i=0;i<16;i++) {
+        ai = .5*GRID[i][0]; ti = .5*(GRID[i][1]+1.);
+        res += ai*clog(1.-z*ti)/ti;
+      }
+      return res;
+    }
+  } else {
+    return - Li2(1./z) - .5*SQR(clog(-z)) - ZE2;
+  }
 }
 
-double S3(double y0, double a, double b, double c) {
-  double D = SQR(b)-4.*a*c;
-  double y1 = creal( .5*(-b-csqrt(D))/a ),
-         y2 = creal( .5*(-b+csqrt(D))/a );
-  
-  return creal( R(y0,y1) + R(y0,y2) );
+double complex R(double complex y0, double complex y1) {
+  double complex omy0 = 1.-y0, omy1 = 1.-y1, y1my0=y1-y0;
+  //printf( " y0 = %g + I %g ... 1-y0 = %g + I %g \n", y0, omy0);
+  double complex tmp = Li2(-omy1/y1my0) - Li2(y1/y1my0);
+  if ( (cabs(omy0)>1e-12) && (cabs(omy1)>1e-12) ) {tmp += +clog(omy0/y1my0)*clog(-omy1/y1my0);}
+  if ( (cabs(  y0)>1e-12) && (cabs(y1  )>1e-12) ) {tmp += -clog(-y0/y1my0)*clog(y1/y1my0);}
+  //printf( " result = %g + I %g \n", tmp);
+  return (tmp);
+}
+
+double complex S3(double complex y0,
+                  double complex a, double complex b, double complex c) {
+  double complex D = SQR(b)-4.*a*c;
+  double complex y1 = ( .5*(-b-csqrt(D))/a ),
+                 y2 = ( .5*(-b+csqrt(D))/a );
+
+  //printf( " y1 = %g + I %g ... y2 = %g + I %g \n", y1, y2);
+  return ( R(y0,y1) + R(y0,y2) );
 }
 
 
@@ -237,16 +369,16 @@ double L1(double M2) {
   return -M2*( log(fabs(SQR(mubar)/M2)) + 1. );
 }
 
-double L2(double M2a, double M2b, double M2d) {
+double L2_old(double M2a, double M2b, double M2d) {
   double res[1], err[1];
 
   //if (sqrt(M2d)>sqrt(M2a)+sqrt(M2b)) {
   double complex lam_ABD = csqrt( lam(M2a,M2b,M2d) );
 
-    //double x_plus  = fmin( fmax( .5*(M2b+M2d-M2a+creal(lam_ABD))/M2d, 0. ), 1.),
-           //x_minus = fmin( fmax( .5*(M2b+M2d-M2a-creal(lam_ABD))/M2d, 0. ), 1.);
+    double x_plus  = fmin( fmax( .5*(M2b+M2d-M2a+creal(lam_ABD))/M2d, 0. ), 1.),
+           x_minus = fmin( fmax( .5*(M2b+M2d-M2a-creal(lam_ABD))/M2d, 0. ), 1.);
 
-    /*int integrand(unsigned dim,  const double *x, void *data_,
+    int integrand(unsigned dim,  const double *x, void *data_,
                   unsigned fdim, double *val) {
       double _X_ = x[0]*x_minus,
              _Y_ = (1.-x[0])*x_minus + x[0]*x_plus,
@@ -258,8 +390,8 @@ double L2(double M2a, double M2b, double M2d) {
       val[0] = x_minus*log1 + (x_plus-x_minus)*log2 + (1.-x_plus)*log3;
       return 0;
     }//*/
-  //} else {
-  /*  int integrand(unsigned dim,  const double *x, void *data_,
+  /*} else {
+    int integrand(unsigned dim,  const double *x, void *data_,
                   unsigned fdim, double *val) {
       double _X_ = x[0];
       val[0] = log(fabs( SQR(mubar)/(M2a*_X_+M2b*(1.-_X_)-M2d*_X_*(1.-_X_)) ));
@@ -267,20 +399,32 @@ double L2(double M2a, double M2b, double M2d) {
     }//*/
   //}
 
-  //double xl[1] = { 0. };
-  //double xu[1] = { 1. };
+  double xl[1] = { 0. };
+  double xu[1] = { 1. };
 
-  //hcubature(1, integrand, NULL, 1, xl, xu, MaxEvls, 1e-10, 0, ERROR_INDIVIDUAL, res, err);
-  //return -res[0];
-    double complex x1 = .5*(M2b+M2d-M2a+creal(lam_ABD))/M2d,
+  hcubature(1, integrand, NULL, 1, xl, xu, MaxEvls, 1e-10, 0, ERROR_INDIVIDUAL, res, err);
+  return -res[0];
+  /*  double complex x1 = .5*(M2b+M2d-M2a+creal(lam_ABD))/M2d,
                    x2 = .5*(M2b+M2d-M2a-creal(lam_ABD))/M2d;
   return - log(fabs(SQR(mubar)/M2d)) 
     + creal( clog(1.-x1)-x1*clog((x1-1.)/x1)-1.)
-    + creal( clog(1.-x2)-x2*clog((x2-1.)/x2)-1.);
+    + creal( clog(1.-x2)-x2*clog((x2-1.)/x2)-1.);//*/
+}
+
+double L2(double M2a, double M2b, double M2d) {
+  double res[1], err[1];
+
+  double complex lam_ABD = csqrt( lam(M2a,M2b,M2d) );
+  double complex x1 = .5*(M2b+M2d-M2a+lam_ABD)/M2d,
+                 x2 = .5*(M2b+M2d-M2a-lam_ABD)/M2d;
+
+  return - log(fabs(SQR(mubar)/M2d))
+         + creal( clog(1.-x1)-x1*clog((x1-1.)/x1)-1.)
+         + creal( clog(1.-x2)-x2*clog((x2-1.)/x2)-1.);//*/
 }
 
 
-double L3(double K2,
+double L3_new(double K2,
           double M2a, double M2b, double M2c, double M2d, double M2e) {
   double res[1], err[1];
 
@@ -304,49 +448,34 @@ double L3(double K2,
 }//*/
 
 
-double L3_new(double K2,
+double L3(double K2,
           double M2a, double M2b, double M2c, double M2d, double M2e) {
   double res[1], err[1];
   double a = M2e, b = M2d, c = K2-M2d-M2e, d = M2b-M2c-M2e, e = M2a-M2b+M2e-K2, f = M2c;
   double complex lam_DE = csqrt( lam(M2d,M2e,K2) );
+  //printf(" lam = %g + I %g \n", lam_DE );
 
-  double al = creal( .5*( M2d+M2e-K2 + lam_DE )/M2d );
+  double complex al,
+                 al1 = .5*( M2d+M2e-K2 + lam_DE )/M2d ,
+                 al2 = .5*( M2d+M2e-K2 - lam_DE )/M2d ;
+  //printf(" al1 = %g + I %g \n", al );
+  //printf(" al2 = %g + I %g \n", al2 );
+  if ( cabs(al1) > cabs(al2) ) { al = al1; }
+  else { al = al2; }
 
-  double y0 = - (d+e*al)/(c+2.*b*al),
+  double complex y0 = - (d+e*al)/(c+2.*b*al),
                  y1 = y0 + al,
                  y2 = y0/(1.-al),
                  y3 = -y0/al;
 
-  double tmp = 
-  + S3(y1,b,c+e,a+d+f)
-  - S3(y2,a+b+c,d+e,f)
-  + S3(y3,a,d,f);
+  //printf(" y0 = %g + I %g \n", y0 );
+  //printf(" y1 = %g + I %g \n", y1 );
+  //printf(" y2 = %g + I %g \n", y2 );
+  //printf(" y3 = %g + I %g \n", y3 );
+
+  double complex tmp = + S3(y1,b,c+e,a+d+f) - S3(y2,a+b+c,d+e,f) + S3(y3,a,d,f);
   //printf(" res = %g \n", tmp/(c+2.*b*al) );
-  return ( tmp/(c+2.*b*al) );
-/*
-  double D1 = b*y1*y1 + (c+e)*y1+(a+d+f),
-         D2 = (a+b+c)*y2*y2 + (d+e)*y2 + f,
-         D3 = a*y3*y3 + d*y3 + f;
-
-  int integrand(unsigned dim,  const double *x, void *data_,
-                unsigned fdim, double *val) {
-    double _Y_ = x[0];
-
-    double complex N1 = b*SQR(_Y_) + (c+e)*_Y_+(a+d+f),
-                   N2 = (a+b+c)*SQR(_Y_) + (d+e)*_Y_ + f,
-                   N3 = a*SQR(_Y_) + d*_Y_ + f;
-
-    double complex tmp = log(fabs(N1/D1))/(_Y_-y1) - log(fabs(N2/D2))/(_Y_-y2) + clog(fabs(N3/D3))/(_Y_-y3);
-    val[0] = creal(tmp);
-    return 0;
-  }
-
-  double xl[1] = { 0. };
-  double xu[1] = { 1. };
-
-  hcubature(1, integrand, NULL, 1, xl, xu, MaxEvls, 1e-6, 0, ERROR_INDIVIDUAL, res, err);//*/
-  //printf(" res = %g \n", res[0]/(c+2.*b*al) );
-  //return creal( res[0]/(c+2.*b*al) );
+  return creal( tmp/(c+2.*b*al) );
 }//*/
 
 
@@ -403,7 +532,8 @@ double Bubble_0(o,k,A_,B_,C_,D_,c)
     }
     temp *= E_PD; temp += cK*E_K*L2ab;
 
-    double complex thermal_weight = 1. + n(sC,eC-uC) + n(sD,eD-uD) ;
+    //double complex thermal_weight = 1. + n(sC,eC-uC) + n(sD,eD-uD) ;
+    double complex thermal_weight = calN(sC,sD,eC-uC,eD-uD);
 
     double complex jacobian =  ( eC_p - eC_m )              // from X = [0,1]
                               *SGN(creal(eC*eD))           ;//
@@ -486,7 +616,8 @@ double Triangle_0(o,k,A_,B_,C_,D_,E_,c)
     temp *= (ca-cb-cc);
     temp += (cb*E_PD+cc*E_K)*L3abc;
 
-    double complex thermal_weight = 1. + n(sD,eD-uD) + n(sE,eE-uE) ;
+    //double complex thermal_weight = 1. + n(sD,eD-uD) + n(sE,eE-uE) ;
+    double complex thermal_weight = calN(sD,sE,eD-uD,eE-uE);
 
     double complex jacobian =  ( eD_p - eD_m )              // from X = [0,1]
                               *SGN(creal(eD*eE))           ;//

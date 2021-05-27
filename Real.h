@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------*/
 
-double    TolReal=1e-8;
+double    TolReal=1e-10;
 int       MaxEvls = 1e8;
 
 #include "Theta.h"
@@ -52,8 +52,9 @@ double Rate_1_to_3(o,k,A_,B_,C_,func)
     double complex e2  = .5*( q0*(s12+SQR(m2)-SQR(m1)) + q*_Z_*(lam_12) )/s12;
     double complex e1  = q0 - e2, e3 = o - q0;
 
-    double complex thermal_weight =  ( n(s1*s2,q0-u1-u2) - n(s3,q0-o+u3)  )
+    /*double complex thermal_weight =  ( n(s1*s2,q0-u1-u2) - n(s3,q0-o+u3)  )
                                     *( n(s2,e2-u2)       - n(s1,e2-q0+u1) );//*/
+    double complex thermal_weight =  calN(s1*s2,s3,q0-u1-u2,o-q0-u3)*calN(s2,s1,e2-u2,q0-e2-u1);
 
     double complex jacobian =  ( SQR(M-m3) - SQR(m1+m2) )   // from X = [0,1]
                               *( .5*k*lam_3/SQR(M) )        // ..   Y = [-1,1]
@@ -114,8 +115,9 @@ double Rate_2_to_2_sChan(o,k,A_,B_,C_,func)
 
     double complex e2  = .5*( q0*(s+SQR(m2)-SQR(m1)) + q*_Z_*(lam_12) )/s;
 
-    double complex thermal_weight =  ( n(t1,q0-o-U1) - n(s1*s2,q0-u1-u2) )
+    /*double complex thermal_weight =  ( n(t1,q0-o-U1) - n(s1*s2,q0-u1-u2) )
                                     *( n(s2,e2-u2)   - n(s1,e2-q0+u1)    );//*/
+    double complex thermal_weight = calN(t1,s1*s2,q0-o-U1,u1+u2-q0)*calN(s2,s1,e2-u2,q0-e2-u1);
 
     double complex jacobian =  fmax( SQR(M+M1), SQR(m1+m2) )/SQR(_X_) // from X = [0,1]
                               *( .5*k*lam_1/SQR(M) )                  // ..   Y = [-1,1]
@@ -176,8 +178,9 @@ double Rate_2_to_2_tChan(o,k,A_,B_,C_,func)
       //if (creal(t)<0.)      { e1 = (1.-_Z_)*e1m + _Z_*LAM; jac_e1 = LAM-e1m; }
       else if (creal(t)>0.) { e1 = (1.-_Z_)*e1m + _Z_*e1p; jac_e1 = e1p-e1m; }
 
-      double complex thermal_weight =  ( n(t1*s1,q0-u1+U1) - n(s2,q0-o+u2)  )
+      /*double complex thermal_weight =  ( n(t1*s1,q0-u1+U1) - n(s2,q0-o+u2)  )
                                       *( n(t1,e1-q0-U1)    - n(s1,e1-u1)    );//*/
+      double complex thermal_weight =  - calN(t1*s1,s2,q0-u1+U1,o-q0-u2)*calN(t1,s1,q0-e1-U1,e1-u1);
 
       double complex jacobian = ( .5*k*lam_2/SQR(M) )         // ..   Y = [-1,1]
                                 *jac_e1                       // ..   Z = [-1,1]
@@ -190,7 +193,8 @@ double Rate_2_to_2_tChan(o,k,A_,B_,C_,func)
       return (prefactor)*(thermal_weight)*(jacobian)*(rate);
     }
 
-    double complex t_1 = 1.-1./(_X_), j_1 = 1./SQR(_X_); // (-inf,0]
+    //double complex t_1 = 1.-1./(_X_), j_1 = 1./SQR(_X_); // (-inf,0]
+    double complex t_1 = SQR(M)*(1.-1./(_X_)), j_1 = SQR(M/_X_); // (-inf,0]
     double complex j_2 = fmin( SQR(M-m2), SQR(m1-M1) ), t_2 = j_2*_X_;  // [0,min(...))
     //printf(" j_2 = %.4f, t_2 = %.4f\n",j_2, t_2);
 
@@ -246,8 +250,9 @@ double Rate_3_to_1_sChan(o,k,A_,B_,C_,func)
 
     double complex E2  = .5*( q0*(s+SQR(M2)-SQR(M1)) + q*_Z_*(lam_12) )/s;
 
-    double complex thermal_weight =  ( n(t1*t2,q0-U1-U2) - n(s1,q0+o-u1)  )
+    /*double complex thermal_weight =  ( n(t1*t2,q0-U1-U2) - n(s1,q0+o-u1)  )
                                     *( n(t2,E2-U2)       - n(t1,E2-q0+U1) );//*/
+    double complex thermal_weight =  calN(t1*t2,s1,q0-U1-U2,u1-o-q0)*calN(t2,t1,E2-U2,q0-E2-U1);
 
     double complex jacobian =  ( SQR(m1-M) - SQR(M1+M2) )   // from X = [0,1]
                               *( .5*k*lam_1/SQR(M) )        // ..   Y = [-1,1]
@@ -305,8 +310,9 @@ double Rate_3_to_1_tChan(o,k,A_,B_,C_,func)
 
     double complex E1  = .5*( q0*(t+SQR(M1)-SQR(m1)) + q*_Z_*(lam_11) )/t;
 
-    double complex thermal_weight =  ( n(t1*s1,q0+u1-U1) - n(t2,q0+o+U2)  )
+    /*double complex thermal_weight =  ( n(t1*s1,q0+u1-U1) - n(t2,q0+o+U2)  )
                                     *( n(t1,E1-U1)       - n(s1,E1-q0-u1) );//*/
+    double complex thermal_weight = calN(t1*s1,t2,q0+u1-U1,-q0-o-U2)*calN(t1,s1,E1-U1,q0+u1-E1);
 
     double complex jacobian =  ( SQR(m1-M1) - SQR(M+M2) )   // from X = [0,1]
                               *( .5*k*lam_2/SQR(M) )        // ..   Y = [-1,1]

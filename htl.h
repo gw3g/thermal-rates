@@ -2,7 +2,7 @@
  *  code for HTL corrections
  *
  */
-double    TolHTL=1e-8;
+double    TolHTL=1e-5;
 
 double complex Q0(double complex x) { return .5*clog( (1.+x)/(1.-x) ); }
 
@@ -47,9 +47,10 @@ double Rate_1_to_2_HTL(o,k,A_,B_,mlT)
     double complex eA = .5*( o*(K2+SQR(mA)-SQR(mB)) + k*_X_*lam_AB )/K2, eB = o-eA;
     double complex pA = csqrt(SQR(eA)-SQR(mA)),
                    pB = csqrt(SQR(eB)-SQR(mB));
-    double complex thermal_weight =  ( 1. + n(sA,eA-uA) + n(sB,eB-uB) );
+    //double complex thermal_weight =  ( 1. + n(sA,eA-uA) + n(sB,eB-uB) );
+    double complex thermal_weight =  calN(sA,sB,eA-uA,eB-uB);
     double complex jacobian = .5*k*lam_AB/K2;
-    double complex rate;;
+    double complex rate;
     double complex kpA = .5*(SQR(k)+SQR(pA)-SQR(pB));
     if (E=='K') {
       rate = (o-kpA*eA/SQR(pA))*log(fabs( (eA-pA)/(eA+pA) ))/pA - 2.*kpA/SQR(pA) ;
@@ -61,6 +62,7 @@ double Rate_1_to_2_HTL(o,k,A_,B_,mlT)
     double prefactor = .25*OOFP/k;
 
     double complex _inner = (prefactor)*(thermal_weight)*(jacobian)*(rate)*SGN(creal(eA*eB));
+    //printf(" inner = %g \n", creal(_inner));
 
     val[0] = creal(_inner); val[1] = cimag(_inner);
     return 0;
@@ -69,7 +71,7 @@ double Rate_1_to_2_HTL(o,k,A_,B_,mlT)
   double xl[1] = { -1. };
   double xu[1] = { +1. };
 
-  hcubature(2, integrand, NULL, 1, xl, xu, MaxEvls, TolHTL, 0, ERROR_INDIVIDUAL, res, err);
+  hcubature(2, integrand, NULL, 1, xl, xu, MaxEvls, 0, TolHTL, ERROR_INDIVIDUAL, res, err);
   return -res[0];
 }
 
@@ -95,7 +97,8 @@ double Rate_2_to_2_HTL(o,k,A_,B_,mlT)
 
     double _X_ = x[0], _Y_ = x[1]; // integration variables
 
-    double complex t = 1.-1./(_X_); // (-inf,0]
+    double complex t = SQR(M)*((_X_-1.)/(_X_)); // (-inf,0]
+    //double complex t = -SQR(M)*1e3*_X_; // (-inf,0]
 
     double complex lam_S   = csqrt( lam(t,SQR(M ),SQR(mS)) );
 
@@ -104,15 +107,18 @@ double Rate_2_to_2_HTL(o,k,A_,B_,mlT)
     double complex qk = q0*o + .5*( SQR(mS) - SQR(M) - t);
 
 
-    double complex thermal_weight =  1. + n(sl,q0-ul) + n(sS,o-q0-uS)  ;
-    double complex LAM = ( -n(sl,ul)+n(sS,o-uS) )/thermal_weight;
+    //double complex thermal_weight =  1. + n(sl,q0-ul) + n(sS,o-q0-uS)  ;
+    double complex thermal_weight =  calN(sl,sS,q0-ul,o-q0-uS);
+    //double complex LAM = ( -n(sl,ul)+n(sS,o-uS) )/thermal_weight;
+    //double complex thermal_weight = ( -n(sl,ul)+n(sS,o-uS) );
 
     double complex jacobian = ( .5*k*lam_S/SQR(M) )        // ..   Y = [-1,1]
-                              *1./SQR(_X_) ;               //      X = [0,1]
+                              *SQR(M/_X_) ;               //      X = [0,1]
+                              //*SQR(M)*1e3 ;               //      X = [0,1]
 
     double prefactor = 4.*pow(OOFP,2.)/k;
-    double R0 = rho_0(q0+I*1e-8, q, mlT),
-           RS = rho_s(q0+I*1e-8, q, mlT);
+    double R0 = rho_0(q0+I*1e-9, q, mlT),
+           RS = rho_s(q0+I*1e-9, q, mlT);
 
     double complex rate;
     if (E=='K') {
@@ -122,9 +128,10 @@ double Rate_2_to_2_HTL(o,k,A_,B_,mlT)
     if (E=='U') {
       rate  = + q0*( R0 - .25*M_PI*SQR(mlT)/(q0*q*(t-SQR(ml))) );
     }
-    rate *= LAM;
+    //rate *= LAM;
 
     double complex _inner = (prefactor)*(thermal_weight)*(jacobian)*(rate);
+    //printf(" q0 = %g, t = %g, rate = %g \n", creal(q0), creal(t), creal(rate));
 
     val[0] = creal(_inner); val[1] = cimag(_inner);
     return 0;
