@@ -278,7 +278,7 @@ double _B19_i(double o, double k,
 
   // Here are the explicit integrands:
   if (E=='K') {
-    res = +.5*( _i*( - 2.*(a-o*E1) + ( K2-SQR(ms) ) )
+    res = +.5*( _i*( - 2.*(a-o*E1) ) + _ii*( K2-SQR(ms) ) 
               + _ii*.5*( K2-SQR(ms) )*( t - SQR(M2) - SQR(M1) + SQR(ms) )*creal(F_) 
               )/(t-SQR(ml));
   } else
@@ -385,13 +385,14 @@ double _B27_i(double o, double k,
 
   // Here are the explicit integrands:
   if (E=='K') {
-    res = -.5*( _iii*( 2.*(a-o*E2) - (SQR(ms)-K2) )
+    res = -.5*( _i*( 2.*(a-o*E2) - (SQR(ms)-K2) )
               + _ii*.5*( SQR(ms)-K2 )*( 2.*K2 + SQR(M2) - SQR(m1) - SQR(ms) + s )*creal(F_) 
               )/(s-SQR(ml));
   } else
   if (E=='U') {
-    res = ( _iii*E2 + _ii*.5*( SQR(ms) - K2 )*( E1 + 2.*E2 )*creal(F_) )/(s-SQR(ml));
+    res = ( _i*E2 + _ii*.5*( SQR(ms) - K2 )*( E1 + 2.*E2 )*creal(F_) )/(s-SQR(ml));
   }
+  //printf("res = %.4f\n",creal(res));
   return creal(res);
 }
 
@@ -421,6 +422,7 @@ double _B27_ii(double o, double k,
   if (E=='U') {
     res = ( - _iii*(e1+o) - _iv*2.*SQR(ms)*e1/(s-SQR(ms)) )/(s-SQR(ms));
   }
+  //printf("res = %.4f\n",creal(res));
   return creal(res);
 }
 

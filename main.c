@@ -10,7 +10,6 @@
  *
  */
 
-
 #define SQR(x) ((x)*(x))
 #define SGN(x) (double) ((x>0)-(x<0))
 #define OOFP 0.079577471545947667884441881686
@@ -28,8 +27,11 @@ double complex lam(double complex x, double complex y, double complex z) {
 double complex n(int s, double complex x) {
   //if (creal(x)<0.) { return -1.-n(s,-x); }
   double complex e = cexp(-x);
-  double complex denom = 1. - ((double complex) s)*e;
-  return e*((double complex) s)/denom;
+  //if (creal(x)>10.) { return e*((double) s); }
+  double complex denom ;
+  if (s==1) { denom = - expm1(-creal(x)); }
+  else { denom = 1.-((double) s)*e; }
+  return e*((double) s)/denom;
 }
 
 double complex calN(int sA, int sB,
@@ -210,9 +212,10 @@ int main () {
   //double c_[4] = {.1,.3,.001,.003};
   //double complex test = calG(1.+I*1e-5, .2, 3, c_);
   //printf("test = %g + I %g \n\n", test);
-  E='K';
-  M_scan(1.,.1,.01,.4);
+  E='U';
+  //M_scan(2.,.1,.01,.4);
   //check_ML(3.,0.96875,.1,.01,1.);
+  check_ML(.3,0.4,.1,.01,1.);
   //rho_j_scan1();
 
   //double m_l = .1, m_Q = .01, m_S = 1.;
@@ -517,9 +520,9 @@ void Rate_fig2_scan(double M, double m_l, double m_Q, double m_S) {
   out=fopen(filename,"w");
 
   // Here are some parameters that can be changed:
-  N_k=10; 
+  N_k=150; 
   k_min=0.001;
-  k_max=2.;
+  k_max=15.;
   // don't change anything after that.
 
   k = k_min;
@@ -601,6 +604,7 @@ void check_ML(double M, double k, double m_l, double m_Q, double m_S) {
 
   //double m_l = .1, m_Q = .01, m_S = 1.;
   double mu_l = mu_L - .5*mu_Y, mu_Q = 0., mu_S = .5*mu_Y;
+  //double mu_l = 0., mu_Q = 0., mu_S = 0.;
   double l_[3] = {m_l, mu_l, -1.};
   double Q_[3] = {m_Q, mu_Q, +1.};
   double S_[3] = {m_S, mu_S, +1.};
@@ -654,71 +658,73 @@ void check_ML(double M, double k, double m_l, double m_Q, double m_S) {
     //res_virt -= (SQR(m_S)-SQR(M))*Triangle(o,k,l_,Q_,S_,l_,S_,_virt_iv);
     double ccc[3];
 
-    //res_2_to_2 *= 2.*(SQR(g1)+3.*SQR(g2));
-    //res_3_to_1 *= 2.*(SQR(g1)+3.*SQR(g2));
     printf("\n(i) single pole at m_l\n\n");
     _i = 1; _ii = 0; _iii = 0; _iv = 0;
     do_real();
     //res_1_to_3 = Rate_1_to_3(o,k,l_,Q_,S_,_B1_i);
-    printf(" 1to3 = %g \n", G12*res_1_to_3);
-    printf(" 2to2 = %g \n", G12*res_2_to_2);
+    printf(" 3to1 = %.6f \n", G12*res_3_to_1);
+    printf(" 1to3 = %.6f \n", G12*res_1_to_3);
+    printf(" 2to2 = %.6f \n", G12*res_2_to_2);
     res_virt = Bubble_T(o,k,l_,Q_,S_,l_,_virt_i);
-    printf(" virtual_T = %g \n", G12*res_virt);
+    printf(" virtual_T = %.6f \n", G12*res_virt);
     ccc[0] = 1.; ccc[1] = 0.; ccc[2] = 0.;
     res_virt_0 = Bubble_0(o,k,l_,Q_,S_,l_,ccc);
-    printf(" virtual_0 = %g \n", G12*res_virt_0);
-    printf(" sum of virtuals = %g \n", G12*(res_virt+res_virt_0));
-    res_i = G12*(res_1_to_3+res_2_to_2+res_virt+res_virt_0);
-    printf(" sum of all = %g \n", res_i );
+    printf(" virtual_0 = %.6f \n", G12*res_virt_0);
+    printf(" sum of virtuals = %.6f \n", G12*(res_virt+res_virt_0));
+    res_i = G12*(res_1_to_3+res_2_to_2+res_3_to_1+res_virt+res_virt_0);
+    printf(" sum of all = %.6f \n", res_i );
 
     printf("\n(ii) poles at m_l & m_S\n\n");
     _i = 0; _ii = 1; _iii = 0; _iv = 0;
     do_real();
     //res_1_to_3 = Rate_1_to_3(o,k,l_,Q_,S_,_B1_i);
-    printf(" 1to3 = %g \n", G12*res_1_to_3);
-    printf(" 2to2 = %g \n", G12*res_2_to_2);
+    printf(" 3to1 = %.6f \n", G12*res_3_to_1);
+    printf(" 1to3 = %.6f \n", G12*res_1_to_3);
+    printf(" 2to2 = %.6f \n", G12*res_2_to_2);
     res_virt = (SQR(m_S)-SQR(M))*Triangle_T(o,k,l_,Q_,S_,l_,S_,_virt_iv);
-    printf(" virtual_T = %g \n", G12*res_virt);
+    printf(" virtual_T = %.6f \n", G12*res_virt);
     ccc[0] = 2.; ccc[1] = 1.; ccc[2] = 0.;
     res_virt_0 = (SQR(m_S)-SQR(M))*Triangle_0(o,k,l_,Q_,S_,l_,S_,ccc);
-    printf(" virtual_0 = %g \n", G12*res_virt_0);
-    printf(" sum of virtuals = %g \n", G12*(res_virt+res_virt_0));
-    res_ii = G12*(res_1_to_3+res_2_to_2+res_virt+res_virt_0);
-    printf(" sum of all = %g \n", res_ii );
+    printf(" virtual_0 = %.6f \n", G12*res_virt_0);
+    printf(" sum of virtuals = %.6f \n", G12*(res_virt+res_virt_0));
+    res_ii = G12*(res_1_to_3+res_2_to_2+res_3_to_1+res_virt+res_virt_0);
+    printf(" sum of all = %.6f \n", res_ii );
 
     printf("\n(iii) single pole at m_S\n\n");
     _i = 0; _ii = 0; _iii = 1; _iv = 0;
     do_real();
-    printf(" 1to3 = %g \n", G12*res_1_to_3);
-    printf(" 2to2 = %g \n", G12*res_2_to_2);
+    printf(" 3to1 = %.6f \n", G12*res_3_to_1);
+    printf(" 1to3 = %.6f \n", G12*res_1_to_3);
+    printf(" 2to2 = %.6f \n", G12*res_2_to_2);
     res_virt = Bubble_T(o,k,Q_,S_,l_,S_,_virt_ii);
-    printf(" virtual_T = %g \n", G12*res_virt);
+    printf(" virtual_T = %.6f \n", G12*res_virt);
     ccc[0] = -1.; ccc[1] = -1.; ccc[2] = 2.;
     res_virt_0 = Bubble_0(o,k,Q_,S_,l_,S_,ccc);
-    printf(" virtual_0 = %g \n", G12*res_virt_0);
-    printf(" sum of virtuals = %g \n", G12*(res_virt+res_virt_0));
-    res_iii = G12*(res_1_to_3+res_2_to_2+res_virt+res_virt_0);
-    printf(" sum of all = %g \n", res_iii );
+    printf(" virtual_0 = %.6f \n", G12*res_virt_0);
+    printf(" sum of virtuals = %.6f \n", G12*(res_virt+res_virt_0));
+    res_iii = G12*(res_1_to_3+res_2_to_2+res_3_to_1+res_virt+res_virt_0);
+    printf(" sum of all = %.6f \n", res_iii );
 
 
     printf("\n(iv) double pole at m_S\n\n");
     _i = 0; _ii = 0; _iii = 0; _iv = 1;
     do_real();
     //res_1_to_3 = Rate_1_to_3(o,k,S_,Q_,l_,_B1_ii);
-    printf(" 1to3 = %g \n", G12*res_1_to_3);
-    printf(" 2to2 = %g \n", G12*res_2_to_2);
+    printf(" 3to1 = %.6f \n", G12*res_3_to_1);
+    printf(" 1to3 = %.6f \n", G12*res_1_to_3);
+    printf(" 2to2 = %.6f \n", G12*res_2_to_2);
     res_virt = (m_S)*( Bubble_T(o,k,Q_,S_,l_,St_plus ,_virt_iii)
                      - Bubble_T(o,k,Q_,S_,l_,St_minus,_virt_iii) )/(2.*dm_S);
-    printf(" virtual_T = %g \n", G12*res_virt);
+    printf(" virtual_T = %.6f \n", G12*res_virt);
     ccc[0] = -1.; ccc[1] = -1.; ccc[2] = 1.;
     res_virt_0 = (m_S)*( Bubble_0(o,k,Q_,S_,l_,St_plus,ccc)
                        - Bubble_0(o,k,Q_,S_,l_,St_minus,ccc) )/(2.*dm_S);
-    printf(" virtual_0 = %g \n", G12*res_virt_0);
-    printf(" sum of virtuals = %g \n", G12*(res_virt+res_virt_0));
-    res_iv = G12*(res_1_to_3+res_2_to_2+res_virt+res_virt_0);
-    printf(" sum of all = %g \n", res_iv );
+    printf(" virtual_0 = %.6f \n", G12*res_virt_0);
+    printf(" sum of virtuals = %.6f \n", G12*(res_virt+res_virt_0));
+    res_iv = G12*(res_1_to_3+res_2_to_2+res_3_to_1+res_virt+res_virt_0);
+    printf(" sum of all = %.6f \n", res_iv );
 
-    printf("\n Sum of (i)-(iv): %g \n", res_i+res_ii+res_iii+res_iv );
+    printf("\n Sum of (i)-(iv): %.6f \n", res_i+res_ii+res_iii+res_iv );
 
 }
 
@@ -777,7 +783,8 @@ void M_scan(double k, double m_l, double m_Q, double m_S) {
   double G12 = 2.*(SQR(g1)+3.*SQR(g2));
 
   //double m_l = .1, m_Q = .01, m_S = 1.;
-  double mu_l = mu_L - .5*mu_Y, mu_Q = 0, mu_S = .5*mu_Y;
+  //double mu_l = mu_L - .5*mu_Y, mu_Q = 0, mu_S = .5*mu_Y;
+  double mu_l = 0., mu_Q = 0., mu_S = 0.;
   double l_[3] = {m_l, mu_l, -1.};
   double Q_[3] = {m_Q, mu_Q, +1.};
   double S_[3] = {m_S, mu_S, +1.};
@@ -805,9 +812,9 @@ void M_scan(double k, double m_l, double m_Q, double m_S) {
   out=fopen(filename,"w");
 
   // Here are some parameters that can be changed:
-  N_M=10; 
+  N_M=300; 
   M_min=0.01;
-  M_max=.10;
+  M_max=10.;
   // don't change anything after that.
 
   M = M_min;
