@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------*/
 
-double    TolReal=1e-9;
+double    TolReal=1e-8;
 int       MaxEvls = 1e8;
 
 #include "Theta.h"

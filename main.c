@@ -213,9 +213,9 @@ int main () {
   //double complex test = calG(1.+I*1e-5, .2, 3, c_);
   //printf("test = %g + I %g \n\n", test);
   E='U';
-  //M_scan(2.,.1,.01,.4);
+  M_scan(.5,.1,.01,.4);
   //check_ML(3.,0.96875,.1,.01,1.);
-  check_ML(.3,0.4,.1,.01,1.);
+  //check_ML(.3,0.4,.1,.01,1.);
   //rho_j_scan1();
 
   //double m_l = .1, m_Q = .01, m_S = 1.;
@@ -790,7 +790,7 @@ void M_scan(double k, double m_l, double m_Q, double m_S) {
   double S_[3] = {m_S, mu_S, +1.};
   double mlT = (1.+SQR(mu_l/M_PI))*G12/(32.); mlT = sqrt(mlT);
 
-  double dm_S = 1e-7;
+  double dm_S = 1e-5;
   double St_plus[3]  = {m_S+dm_S, mu_S, +1.};
   double St_minus[3] = {m_S-dm_S, mu_S, +1.};
 
@@ -882,15 +882,15 @@ void M_scan(double k, double m_l, double m_Q, double m_S) {
     res_2_to_2 *= G12;//2.*(SQR(g1)+3.*SQR(g2));
     res_3_to_1 *= G12;//2.*(SQR(g1)+3.*SQR(g2));
     res_virt   *= G12;//2.*(SQR(g1)+3.*SQR(g2));
-    tot = res_1_to_3 + res_2_to_2 + res_3_to_1 + res_1_to_2;
+    tot = res_1_to_3 + res_2_to_2 + res_3_to_1 + res_1_to_2 + res_virt;
     //tot *= G12;
     //printf("omega = %g , rho_f = %g\n", o, ans);
 
     printf(" o = %.5e , [%2.2f%]\n", o , 100.*frac); 
     //fprintf( out, "%.10e    %.10e    %.10e    %.10e    %.10e    %.10e    %.10e\n", 
     //               M, res_1_to_2, res_1_to_3, res_2_to_2, res_3_to_1, res_virt, tot );
-    fprintf( out, "%.10e    %.10e    %.10e    %.10e    %.10e    %.10e\n", 
-                   M, res_1_to_2, res_1_to_3, res_2_to_2, res_3_to_1, tot );
+    fprintf( out, "%.10e    %.10e    %.10e    %.10e    %.10e    %.10e    %.10e\n", 
+                   M, res_virt, res_1_to_2, res_1_to_3, res_2_to_2, res_3_to_1, tot );
     M *= step;
   }
 

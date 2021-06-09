@@ -120,7 +120,7 @@ double Bubble_T(o,k,A_,B_,C_,D_,func)
   double xl[2] = { 0., 0.};
   double xu[2] = { 1., 1.};
 
-  hcubature(2, integrand, NULL, 2, xl, xu, MaxEvls, TolVirt, 0, ERROR_INDIVIDUAL, res, err);
+  hcubature(2, integrand, NULL, 2, xl, xu, MaxEvls, 0, TolVirt, ERROR_INDIVIDUAL, res, err);
   //printf(" res = %g + I %g    ... err = %g + I %g \n", res[0], res[1], err[0], err[1] );
   return res[0];
 }
@@ -197,7 +197,7 @@ double Triangle_T(o,k,A_,B_,C_,D_,E_,func)
   double xl[2] = { 0., 0.};
   double xu[2] = { 1., 1.};
 
-  hcubature(2, integrand, NULL, 2, xl, xu, MaxEvls, TolVirt, 0, ERROR_INDIVIDUAL, res, err);
+  hcubature(2, integrand, NULL, 2, xl, xu, MaxEvls, 0, TolVirt, ERROR_INDIVIDUAL, res, err);
   //printf(" res = %g + I %g    ... err = %g + I %g \n", res[0], res[1], err[0], err[1] );
   return res[0];
 }
