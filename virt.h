@@ -6,7 +6,7 @@
  *  [void *] argument of func() is a list of masses.
  *
  */
-double    TolVirt=1e-9;
+double    TolVirt=1e-10;
 
 /*--------------------------------------------------------------------*/
 // 1 \to 2 BORN reactions 

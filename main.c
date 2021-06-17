@@ -32,12 +32,13 @@ double k2av(double M) {
 
 // integrating functions:
 #include "cal.h"
-#include "Real.h"
-#include "Virt.h"
+#include "real.h"
+#include "virt.h"
 #include "htl.h"
 
 #include "scan.h"
 #include "rho.h" // master SPF's
+#include "hadronic.h" // top contrib
 
 /*--------------------------------------------------------------------*/
 
@@ -48,7 +49,9 @@ int main () {
   //double complex test = calG(1.+I*1e-5, .2, 3, c_);
   //printf("test = %g + I %g \n\n", test);
   E='K';
-  //M_scan(.5,.1,.01,.4);
+  hadron_scan(.2,8.); // to scan over m_q
+  //M_scan(.4,.1,.01,1.);
+  //M_scan2(8.,.1,.01,0.4);
   //check_ML(3.,0.96875,.1,.01,1.);
   //check_ML(.3,0.4,.1,.01,1.);
   //rho_j_scan1();
@@ -139,8 +142,8 @@ void check_ML(double M, double k, double m_l, double m_Q, double m_S) {
   double g1 = 1./3., g2 = 2./3., mu_L = 1e-3, mu_B = 0., mu_Y = 2.*1e-2;
 
   //double m_l = .1, m_Q = .01, m_S = 1.;
-  double mu_l = mu_L - .5*mu_Y, mu_Q = 0., mu_S = .5*mu_Y;
-  //double mu_l = 0., mu_Q = 0., mu_S = 0.;
+  //double mu_l = mu_L - .5*mu_Y, mu_Q = 0., mu_S = .5*mu_Y;
+  double mu_l = 0., mu_Q = 0., mu_S = 0.;
   double l_[3] = {m_l, mu_l, -1.};
   double Q_[3] = {m_Q, mu_Q, +1.};
   double S_[3] = {m_S, mu_S, +1.};

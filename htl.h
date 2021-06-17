@@ -2,7 +2,7 @@
  *  code for HTL corrections
  *
  */
-double    TolHTL=1e-6;
+double    TolHTL=1e-7;
 
 double complex Q0(double complex x) { return .5*clog( (1.+x)/(1.-x) ); }
 

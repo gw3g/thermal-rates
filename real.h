@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------*/
 
-double    TolReal=1e-6;
+double    TolReal=1e-7;
 int       MaxEvls = 1e8;
 
 #include "Theta.h"
@@ -113,7 +113,7 @@ double Rate_2_to_2_sChan(o,k,A_,B_,C_,func)
     double complex lam_1   = csqrt( lam(s,SQR(M ),SQR(M1)) ),
                    lam_12  = csqrt( lam(s,SQR(m1),SQR(m2)) );
 
-    double alpha = 2., _Y2_ = tanh(alpha*_Y_)/tanh(alpha),
+    double alpha = 3., _Y2_ = tanh(alpha*_Y_)/tanh(alpha),
                        _Z2_ = tanh(alpha*_Z_)/tanh(alpha);
 
     double complex q0  = .5*( o*(s+SQR(M)-SQR(M1) ) + k*_Y2_*(lam_1) )/(SQR(M));
@@ -214,7 +214,7 @@ double Rate_2_to_2_tChan(o,k,A_,B_,C_,func)
     double complex lam_2   = csqrt( lam(t,SQR(M ),SQR(m2)) ),
                    lam_11  = csqrt( lam(t,SQR(m1),SQR(M1)) );
 
-    double alpha = 2., _Y2_ = tanh(alpha*_Y_)/tanh(alpha),
+    double alpha = 4., _Y2_ = tanh(alpha*_Y_)/tanh(alpha),
                        _Z2_ = tanh(alpha*(2.*_Z_-1.))/tanh(alpha);
 
     double complex q0 = .5*( o*(t+SQR(M)-SQR(m2) ) + k*_Y2_*(lam_2) )/SQR(M); // [q0^+,q0^0]
@@ -287,7 +287,7 @@ double Rate_3_to_1_sChan(o,k,A_,B_,C_,func)
     double complex lam_1   = csqrt( lam(s,SQR(M ),SQR(m1)) ),
                    lam_12  = csqrt( lam(s,SQR(M1),SQR(M2)) );
 
-    double alpha = 3., _Y2_ = tanh(alpha*_Y_)/tanh(alpha),
+    double alpha = 4., _Y2_ = tanh(alpha*_Y_)/tanh(alpha),
                        _Z2_ = tanh(alpha*_Z_)/tanh(alpha);
 
     double complex q0  = .5*( -o*(s+SQR(M)-SQR(m1) ) + k*_Y2_*(lam_1) )/SQR(M);
