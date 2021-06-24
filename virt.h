@@ -1,3 +1,7 @@
+/*--------------------------------------------------------------------*/
+
+double    TolVirt=1e-6;
+
 /*
  *  generic code: integrate 1 -> 2 reactions
  *
@@ -6,7 +10,6 @@
  *  [void *] argument of func() is a list of masses.
  *
  */
-double    TolVirt=1e-10;
 
 /*--------------------------------------------------------------------*/
 // 1 \to 2 BORN reactions 
@@ -82,6 +85,9 @@ double Bubble_T(o,k,A_,B_,C_,D_,func)
 
     double _X_ = x[0], _Y_ = x[1]; // integration variables
 
+    //double alpha = 1., _X2_ = tanh(alpha*_X_)/tanh(alpha);
+
+    //double complex eC = .5*( o*(K2+SQR(mC)-SQR(mD)) + k*_X2_*(lam_DC) )/K2 , eD = o - eC,
     double complex eC = (1-_X_)*eC_m + _X_*eC_p , eD = o - eC,
                    pC = csqrt( SQR(eC) - SQR(mC) ),
                    pD = csqrt( SQR(eD) - SQR(mD) );
@@ -105,6 +111,7 @@ double Bubble_T(o,k,A_,B_,C_,D_,func)
     double complex thermal_weight = calN(sC,sD,eC-uC,eD-uD);
 
     double complex jacobian =  ( eC_p - eC_m )              // from X = [0,1]
+                              //k*lam_DC*alpha*cosh(alpha)/(K2*sinh(alpha)*SQR(cosh(alpha*_X_)))
                               *( 1./SQR(_Y_) )              // ..   Y = [0,1]
                               *SGN(creal(eC*eD))           ;//
 
@@ -155,6 +162,9 @@ double Triangle_T(o,k,A_,B_,C_,D_,E_,func)
 
     double _X_ = x[0], _Y_ = x[1]; // integration variables
 
+    //double alpha = 1., _X2_ = tanh(alpha*_X_)/tanh(alpha);
+
+    //double complex eD = .5*( o*(K2+SQR(mD)-SQR(mE)) + k*_X2_*(lam_DE) )/K2 , eE = o - eD,
     double complex eD = (1-_X_)*eD_m + _X_*eD_p , eE = o - eD,
                    pD = csqrt( SQR(eD) - SQR(mD) ),
                    pE = csqrt( SQR(eE) - SQR(mE) );
@@ -182,6 +192,7 @@ double Triangle_T(o,k,A_,B_,C_,D_,E_,func)
     double complex thermal_weight = calN(sD,sE,eD-uD,eE-uE);
 
     double complex jacobian =  ( eD_p - eD_m )              // from X = [0,1]
+                              //k*lam_DE*alpha*cosh(alpha)/(K2*sinh(alpha)*SQR(cosh(alpha*_X_)))
                               *( 1./SQR(_Y_) )              // ..   Y = [0,1]
                               *SGN(creal(eD*eE))           ;//
 
@@ -513,6 +524,9 @@ double Bubble_0(o,k,A_,B_,C_,D_,c)
 
     double _X_ = x[0];// integration variables
 
+    //double alpha = 1., _X2_ = tanh(alpha*_X_)/tanh(alpha);
+
+    //double complex eC  = .5*( o*(K2+SQR(mC)-SQR(mD)) + k*_X2_*(lam_DC) )/K2 , eD = o - eC,
     double complex eC = (1-_X_)*eC_m + _X_*eC_p , eD = o - eC,
                    pC = csqrt( SQR(eC) - SQR(mC) ),
                    pD = csqrt( SQR(eD) - SQR(mD) );
@@ -536,6 +550,7 @@ double Bubble_0(o,k,A_,B_,C_,D_,c)
     double complex thermal_weight = calN(sC,sD,eC-uC,eD-uD);
 
     double complex jacobian =  ( eC_p - eC_m )              // from X = [0,1]
+                              //k*lam_DC*alpha*cosh(alpha)/(K2*sinh(alpha)*SQR(cosh(alpha*_X_)))
                               *SGN(creal(eC*eD))           ;//
 
     double prefactor = -.25*pow(OOFP,3.)/k;
@@ -599,7 +614,10 @@ double Triangle_0(o,k,A_,B_,C_,D_,E_,c)
 
     double _X_ = x[0];// _Z_ = x[2]; // integration variables
 
+    double alpha = 1., _X2_ = tanh(alpha*_X_)/tanh(alpha);
+
     double complex eD = (1-_X_)*eD_m + _X_*eD_p , eE = o - eD,
+    //double complex eD  = .5*( o*(K2+SQR(mD)-SQR(mE)) + k*_X2_*(lam_DE) )/K2 , eE = o - eD,
                    pD = csqrt( SQR(eD) - SQR(mD) ),
                    pE = csqrt( SQR(eE) - SQR(mE) );
 
@@ -620,6 +638,7 @@ double Triangle_0(o,k,A_,B_,C_,D_,E_,c)
     double complex thermal_weight = calN(sD,sE,eD-uD,eE-uE);
 
     double complex jacobian =  ( eD_p - eD_m )              // from X = [0,1]
+                              //k*lam_DE*alpha*cosh(alpha)/(K2*sinh(alpha)*SQR(cosh(alpha*_X_)))
                               *SGN(creal(eD*eE))           ;//
 
     double prefactor = -.25*pow(OOFP,3.)/k;

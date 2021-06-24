@@ -1,9 +1,8 @@
 /*--------------------------------------------------------------------*/
 
-double    TolReal=1e-7;
+double    TolReal = 1e-8;
 int       MaxEvls = 1e8;
 
-#include "Theta.h"
 /*
  *  generic code: integrate n -> (4-n) reactions
  *
@@ -20,12 +19,13 @@ int       MaxEvls = 1e8;
 double Rate_1_to_3(o,k,A_,B_,C_,func)
   double o,k;
   void *A_, *B_, *C_;
-  double (*func)(double,double,double complex,double complex,double complex,void *);
+  double (*func)(double,double, // o, k
+                 double complex,double complex,double complex,
+                 void *); // pointer to masses
 {
   double res[2], err[2]; // reproducing eqs. (B.5)-(B.8)
 
-  // TODO (!)
-  if (o<k) { printf("Below LC not yet implemented!"); return 0.; }
+  if (o<k) { printf("Below light-cone not implemented!"); return 0.; }
 
   double M = sqrt( SQR(o)-SQR(k) );
   double m1 = ((double *)A_)[0], m2 = ((double *)B_)[0], m3 = ((double *)C_)[0];
@@ -52,9 +52,8 @@ double Rate_1_to_3(o,k,A_,B_,C_,func)
     double complex e2  = .5*( q0*(s12+SQR(m2)-SQR(m1)) + q*_Z_*(lam_12) )/s12;
     double complex e1  = q0 - e2, e3 = o - q0;
 
-    /*double complex thermal_weight =  ( n(s1*s2,q0-u1-u2) - n(s3,q0-o+u3)  )
-                                    *( n(s2,e2-u2)       - n(s1,e2-q0+u1) );//*/
-    double complex thermal_weight =  calN(s1*s2,s3,q0-u1-u2,o-q0-u3)*calN(s2,s1,e2-u2,q0-e2-u1);
+    double complex thermal_weight =  calN(s1*s2,s3,q0-u1-u2,o-q0-u3)
+                                         *calN(s2,s1,e2-u2,q0-e2-u1);
 
     double complex jacobian =  ( SQR(M-m3) - SQR(m1+m2) )   // from X = [0,1]
                               *( .5*k*lam_3/SQR(M) )        // ..   Y = [-1,1]
@@ -87,7 +86,9 @@ double Rate_1_to_3(o,k,A_,B_,C_,func)
 double Rate_2_to_2_sChan(o,k,A_,B_,C_,func)
   double o,k;
   void *A_, *B_, *C_;
-  double (*func)(double,double,double complex,double complex,double complex,void *);
+  double (*func)(double,double, // o, k
+                 double complex,double complex,double complex,
+                 void *); // pointer to masses
 {
   double res[2], err[2]; // reproducing eqs. (B.14)-(B.17)
 
@@ -100,7 +101,7 @@ double Rate_2_to_2_sChan(o,k,A_,B_,C_,func)
   int    t1 = ((double *)A_)[2], s1 = ((double *)B_)[2], s2 = ((double *)C_)[2];
   double M_[3] = {M1,m1,m2};
   double s_min = fmax( SQR(M+M1), SQR(m1+m2) );
-  //printf(" YES: M = %g, M1 = %g, m1 = %g, m2 = %g \n",M,M1,m1,m2); 
+  //printf("2->2, s channel:  M = %g, M1 = %g, m1 = %g, m2 = %g \n",M,M1,m1,m2); 
   //printf(" s_min = %g\n",s_min); 
 
   int integrand(unsigned dim,  const double *x, void *data_,
@@ -132,7 +133,7 @@ double Rate_2_to_2_sChan(o,k,A_,B_,C_,func)
                               /(2.)                      ;          //
 
     double prefactor = .5*pow(OOFP,3.);
-    double rate = func(o, k, s, q0, e2, M_);
+    double rate = func(o, k, s-I*1e-8, q0, e2, M_);
 
     double complex _inner = (prefactor)*(thermal_weight)*(jacobian)*(rate);
     //printf(" M = %g, s = %g, e2 = %g, inner= %g \n",M, creal(s),creal(e2),creal(_inner) );
@@ -153,7 +154,9 @@ double Rate_2_to_2_sChan(o,k,A_,B_,C_,func)
 double Rate_2_to_2_tChan(o,k,A_,B_,C_,func)
   double o,k;
   void *A_, *B_, *C_;
-  double (*func)(double,double,double complex,double complex,double complex,void *);
+  double (*func)(double,double, // o, k
+                 double complex,double complex,double complex,
+                 void *); // pointer to masses
 {
   double res[2], err[2]; // reproducing eqs. (4.15)-(4.18)
 
@@ -165,6 +168,7 @@ double Rate_2_to_2_tChan(o,k,A_,B_,C_,func)
   double U1 = ((double *)A_)[1], u1 = ((double *)B_)[1], u2 = ((double *)C_)[1];
   int    t1 = ((double *)A_)[2], s1 = ((double *)B_)[2], s2 = ((double *)C_)[2];
   double M_[3] = {M1,m1,m2};
+  //printf("2->2, t channel:  M = %g, M1 = %g, m1 = %g, m2 = %g \n",M,M1,m1,m2); 
   double t_max = fmin( SQR(M-m2), SQR(m1-M1) );
   /*if ((M-m2)*(m1-M1) > 0.) { 
     printf(" YES: M = %g, M1 = %g, m1 = %g, m2 = %g \n",M,M1,m1,m2); 
@@ -185,13 +189,13 @@ double Rate_2_to_2_tChan(o,k,A_,B_,C_,func)
     double complex q = csqrt( SQR(q0) - t );
 
     double complex e1m = .5*( q0*(t+SQR(m1)-SQR(M1)) - q*(lam_11) )/t,
-                   e1 = (e1m)-fabs(M)*(1.-1./_Z_);
+                   e1 = (e1m)-fabs(e1m)*(1.-1./_Z_);
 
     double complex thermal_weight =  - calN(t1*s1,s2,q0-u1+U1,o-q0-u2)*calN(t1,s1,q0-e1+U1,e1-u1);
 
     double complex jacobian = ( SQR(M/_X_) )                //      X = [0,1]
-                              *( .5*lam_2/SQR(M) )        // ..   Y = [-1,1]
-                              *( fabs(M)/SQR(_Z_) )         // ..   Z = [0,1]
+                              *( .5*lam_2/SQR(M) )          // ..   Y = [-1,1]
+                              *( fabs(e1m)/SQR(_Z_) )         // ..   Z = [0,1]
                               /(2.*q)                      ;//
 
     double prefactor = .5*pow(OOFP,3.);
@@ -261,7 +265,9 @@ double Rate_2_to_2_tChan(o,k,A_,B_,C_,func)
 double Rate_3_to_1_sChan(o,k,A_,B_,C_,func)
   double o,k;
   void *A_, *B_, *C_;
-  double (*func)(double,double,double complex,double complex,double complex,void *);
+  double (*func)(double,double, // o, k
+                 double complex,double complex,double complex,
+                 void *); // pointer to masses
 {
   double res[2], err[2]; // reproducing eqs. (B.31)-(B.34)
 
@@ -327,7 +333,9 @@ double Rate_3_to_1_sChan(o,k,A_,B_,C_,func)
 double Rate_3_to_1_tChan(o,k,A_,B_,C_,func)
   double o,k;         // K = (\omega,k)
   void *A_, *B_, *C_; // (mass, chem. potential, boson/fermion)
-  double (*func)(double,double,double complex,double complex,double complex,void *);
+  double (*func)(double,double, // o, k
+                 double complex,double complex,double complex,
+                 void *); // pointer to masses
 {
   double res[2], err[2]; // reproducing eqs. (B.23)-(B.26)
 

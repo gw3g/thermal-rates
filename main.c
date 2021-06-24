@@ -6,7 +6,7 @@
 /*
  *    code for rate computations
  *    @author  GJ
- *    @version 0.3
+ *    @version 0.4
  *
  */
 
@@ -23,21 +23,15 @@ char E = 'U';
 void check_ML(double,double,double,double,double);
 void virtual_check(double,double,double);   // omega,k,ma input
 
-#include <gsl/gsl_sf_bessel.h>
-double k2av(double M) {
-  // worth noting: k0=3*k for k0~26.
-  return 3.*M*gsl_sf_bessel_Kn(3,M)/gsl_sf_bessel_Kn(2,M);
-}
-
-
 // integrating functions:
 #include "cal.h"
+#include "Theta.h"
 #include "real.h"
 #include "virt.h"
 #include "htl.h"
 
 #include "scan.h"
-#include "rho.h" // master SPF's
+#include "rho.h"      // master SPF's
 #include "hadronic.h" // top contrib
 
 /*--------------------------------------------------------------------*/
@@ -48,8 +42,8 @@ int main () {
   //double c_[4] = {.1,.3,.001,.003};
   //double complex test = calG(1.+I*1e-5, .2, 3, c_);
   //printf("test = %g + I %g \n\n", test);
-  E='K';
-  hadron_scan(.2,8.); // to scan over m_q
+  E='U';
+  hadron_scan(.2,1.); // to scan over m_q
   //M_scan(.4,.1,.01,1.);
   //M_scan2(8.,.1,.01,0.4);
   //check_ML(3.,0.96875,.1,.01,1.);

@@ -3,6 +3,12 @@
  *
  */
 
+#include <gsl/gsl_sf_bessel.h>
+double k2av(double M) {
+  // worth noting: k0=3*k for k0~26.
+  return 3.*M*gsl_sf_bessel_Kn(3,M)/gsl_sf_bessel_Kn(2,M);
+}
+
 /*--------------------------------------------------------------------*/
 
 double rho_f(double o, double k, void *A_, void *B_, void *C_) {
