@@ -97,7 +97,7 @@ double Rate_2_to_2_sChan(o,k,A_,B_,C_,func)
 
   double M = sqrt( SQR(o)-SQR(k) );
   double M1 = ((double *)A_)[0], m1 = ((double *)B_)[0], m2 = ((double *)C_)[0];
-  double U1 = ((double *)A_)[1], u1 = ((double *)B_)[1], u2 = ((double *)C_)[1];
+  double U1 =-((double *)A_)[1], u1 = ((double *)B_)[1], u2 = ((double *)C_)[1];
   int    t1 = ((double *)A_)[2], s1 = ((double *)B_)[2], s2 = ((double *)C_)[2];
   double M_[3] = {M1,m1,m2};
   double s_min = fmax( SQR(M+M1), SQR(m1+m2) );
@@ -165,7 +165,7 @@ double Rate_2_to_2_tChan(o,k,A_,B_,C_,func)
 
   double M = sqrt( SQR(o)-SQR(k) );
   double M1 = ((double *)A_)[0], m1 = ((double *)B_)[0], m2 = ((double *)C_)[0];
-  double U1 = ((double *)A_)[1], u1 = ((double *)B_)[1], u2 = ((double *)C_)[1];
+  double U1 =-((double *)A_)[1], u1 = ((double *)B_)[1], u2 = ((double *)C_)[1];
   int    t1 = ((double *)A_)[2], s1 = ((double *)B_)[2], s2 = ((double *)C_)[2];
   double M_[3] = {M1,m1,m2};
   //printf("2->2, t channel:  M = %g, M1 = %g, m1 = %g, m2 = %g \n",M,M1,m1,m2); 
@@ -191,7 +191,13 @@ double Rate_2_to_2_tChan(o,k,A_,B_,C_,func)
     double complex e1m = .5*( q0*(t+SQR(m1)-SQR(M1)) - q*(lam_11) )/t,
                    e1 = (e1m)-fabs(e1m)*(1.-1./_Z_);
 
-    double complex thermal_weight =  - calN(t1*s1,s2,q0-u1+U1,o-q0-u2)*calN(t1,s1,q0-e1+U1,e1-u1);
+    double complex thermal_weight;
+    if (fabs(creal(q0-u1+U1))>1e-2) {
+                   thermal_weight =  - calN(t1*s1,s2,q0-u1+U1,o-q0-u2)*calN(t1,s1,q0-e1+U1,e1-u1);
+    } else {
+                   thermal_weight =  ( 1. + (1.+n(s2,o-q0-u2))/n(t1*s1,q0-u1+U1) )
+                                    *( 1. + n(t1,e1-q0-U1) )*n(s1,e1-u1); }
+                   //printf(" q0-u1+U1 = %g , thermal_weight = %g \n", creal(q0-u1+U1), creal(thermal_weight) ); }
 
     double complex jacobian = ( SQR(M/_X_) )                //      X = [0,1]
                               *( .5*lam_2/SQR(M) )          // ..   Y = [-1,1]
@@ -226,7 +232,15 @@ double Rate_2_to_2_tChan(o,k,A_,B_,C_,func)
 
     double complex e1 = .5*( q0*(t+SQR(m1)-SQR(M1)) + q*_Z2_*(lam_11) )/t;
 
-    double complex thermal_weight =  - calN(t1*s1,s2,q0-u1+U1,o-q0-u2)*calN(t1,s1,q0-e1+U1,e1-u1);
+//    double complex thermal_weight =  - calN(t1*s1,s2,q0-u1+U1,o-q0-u2)*calN(t1,s1,q0-e1+U1,e1-u1);
+
+    double complex thermal_weight;
+    if (fabs(q0-u1+U1)>1e-2) {
+                   thermal_weight =  - calN(t1*s1,s2,q0-u1+U1,o-q0-u2)*calN(t1,s1,q0-e1+U1,e1-u1);
+    } else {
+                   thermal_weight =  ( 1. + (1.+n(s2,o-q0-u2))/n(t1*s1,q0-u1+U1) )
+                                    *( 1. + n(t1,e1-q0-U1) )*n(s1,e1-u1); 
+    }
 
     double complex jacobian = t_max                      //      X = [0,1]
                               *alpha*cosh(alpha)/(sinh(alpha)*SQR(cosh(alpha*_Y_)))
@@ -276,7 +290,7 @@ double Rate_3_to_1_sChan(o,k,A_,B_,C_,func)
 
   double M = sqrt( SQR(o)-SQR(k) );
   double M1 = ((double *)A_)[0], M2 = ((double *)B_)[0], m1 = ((double *)C_)[0];
-  double U1 = ((double *)A_)[1], U2 = ((double *)B_)[1], u1 = ((double *)C_)[1];
+  double U1 =-((double *)A_)[1], U2 =-((double *)B_)[1], u1 = ((double *)C_)[1];
   int    t1 = ((double *)A_)[2], t2 = ((double *)B_)[2], s1 = ((double *)C_)[2];
   double M_[3] = {M1,M2,m1};
 
@@ -344,7 +358,7 @@ double Rate_3_to_1_tChan(o,k,A_,B_,C_,func)
 
   double M = sqrt( SQR(o)-SQR(k) );
   double M1 = ((double *)A_)[0], M2 = ((double *)B_)[0], m1 = ((double *)C_)[0];
-  double U1 = ((double *)A_)[1], U2 = ((double *)B_)[1], u1 = ((double *)C_)[1];
+  double U1 =-((double *)A_)[1], U2 =-((double *)B_)[1], u1 = ((double *)C_)[1];
   int    t1 = ((double *)A_)[2], t2 = ((double *)B_)[2], s1 = ((double *)C_)[2];
   double M_[3] = {M1,M2,m1};
 
