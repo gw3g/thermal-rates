@@ -44,12 +44,14 @@ double Rate_1_to_2_HTL(o,k,A_,B_,mlT)
                 unsigned fdim, double *val) {
 
     double _X_ = x[0];
-    double complex eA = .5*( o*(K2+SQR(mA)-SQR(mB)) + k*_X_*lam_AB )/K2, eB = o-eA;
+    double alpha = 4., _X2_ = tanh(alpha*_X_)/tanh(alpha);
+    double complex eA = .5*( o*(K2+SQR(mA)-SQR(mB)) + k*_X2_*lam_AB )/K2, eB = o-eA;
     double complex pA = csqrt(SQR(eA)-SQR(mA)),
                    pB = csqrt(SQR(eB)-SQR(mB));
     //double complex thermal_weight =  ( 1. + n(sA,eA-uA) + n(sB,eB-uB) );
     double complex thermal_weight =  calN(sA,sB,eA-uA,eB-uB);
-    double complex jacobian = .5*k*lam_AB/K2;
+    double complex jacobian = (.5*k*lam_AB/K2)
+                              *alpha*cosh(alpha)/(sinh(alpha)*SQR(cosh(alpha*_X_))) ;
     double complex rate;
     double complex kpA = .5*(SQR(k)+SQR(pA)-SQR(pB));
     if (E=='K') {
@@ -102,7 +104,9 @@ double Rate_2_to_2_HTL(o,k,A_,B_,mlT)
 
     double complex lam_S   = csqrt( lam(t,SQR(M ),SQR(mS)) );
 
-    double complex q0  = .5*( o*(t+SQR(M)-SQR(mS) ) + k*_Y_*(lam_S) )/SQR(M); // [q0^+,q0^0]
+    double alpha = 4., _Y2_ = tanh(alpha*_Y_)/tanh(alpha);
+
+    double complex q0  = .5*( o*(t+SQR(M)-SQR(mS) ) + k*_Y2_*(lam_S) )/SQR(M); // [q0^+,q0^0]
     double complex q = csqrt( SQR(q0) - t );
     double complex qk = q0*o + .5*( SQR(mS) - SQR(M) - t);
 
@@ -113,6 +117,7 @@ double Rate_2_to_2_HTL(o,k,A_,B_,mlT)
     //double complex thermal_weight = ( -n(sl,ul)+n(sS,o-uS) );
 
     double complex jacobian = ( .5*k*lam_S/SQR(M) )        // ..   Y = [-1,1]
+                              *alpha*cosh(alpha)/(sinh(alpha)*SQR(cosh(alpha*_Y_))) 
                               *SQR(M/_X_) ;               //      X = [0,1]
                               //*SQR(M)*1e3 ;               //      X = [0,1]
 

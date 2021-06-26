@@ -114,7 +114,7 @@ double Rate_2_to_2_sChan(o,k,A_,B_,C_,func)
     double complex lam_1   = csqrt( lam(s,SQR(M ),SQR(M1)) ),
                    lam_12  = csqrt( lam(s,SQR(m1),SQR(m2)) );
 
-    double alpha = 3., _Y2_ = tanh(alpha*_Y_)/tanh(alpha),
+    double alpha = 6., _Y2_ = tanh(alpha*_Y_)/tanh(alpha),
                        _Z2_ = tanh(alpha*_Z_)/tanh(alpha);
 
     double complex q0  = .5*( o*(s+SQR(M)-SQR(M1) ) + k*_Y2_*(lam_1) )/(SQR(M));
@@ -133,7 +133,7 @@ double Rate_2_to_2_sChan(o,k,A_,B_,C_,func)
                               /(2.)                      ;          //
 
     double prefactor = .5*pow(OOFP,3.);
-    double rate = func(o, k, s-I*1e-8, q0, e2, M_);
+    double rate = func(o, k, s-I*1e-9, q0, e2, M_);
 
     double complex _inner = (prefactor)*(thermal_weight)*(jacobian)*(rate);
     //printf(" M = %g, s = %g, e2 = %g, inner= %g \n",M, creal(s),creal(e2),creal(_inner) );
@@ -224,7 +224,7 @@ double Rate_2_to_2_tChan(o,k,A_,B_,C_,func)
     double complex lam_2   = csqrt( lam(t,SQR(M ),SQR(m2)) ),
                    lam_11  = csqrt( lam(t,SQR(m1),SQR(M1)) );
 
-    double alpha = 4., _Y2_ = tanh(alpha*_Y_)/tanh(alpha),
+    double alpha = 6., _Y2_ = tanh(alpha*_Y_)/tanh(alpha),
                        _Z2_ = tanh(alpha*(2.*_Z_-1.))/tanh(alpha);
 
     double complex q0 = .5*( o*(t+SQR(M)-SQR(m2) ) + k*_Y2_*(lam_2) )/SQR(M); // [q0^+,q0^0]

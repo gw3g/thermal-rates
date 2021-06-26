@@ -42,9 +42,9 @@ int main () {
   //double c_[4] = {.1,.3,.001,.003};
   //double complex test = calG(1.+I*1e-5, .2, 3, c_);
   //printf("test = %g + I %g \n\n", test);
-  E='U';
-  hadron_scan(.2,2.); // to scan over m_q
-  //M_scan(.4,.1,.01,1.);
+  E='K';
+  //hadron_scan(.2,2.); // to scan over m_q
+  M_scan(1.,.1,.01,1.);
   //M_scan2(8.,.1,.01,0.4);
   //check_ML(3.,0.96875,.1,.01,1.);
   //check_ML(.3,0.4,.1,.01,1.);
