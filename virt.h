@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------*/
 
-double    TolVirt=1e-7;
+double    TolVirt=1e-8;
 
 /*
  *  generic code: integrate 1 -> 2 reactions
@@ -125,7 +125,7 @@ double Bubble_T(o,k,A_,B_,C_,D_,func)
   }
 
   double xl[2] = { -1., 0.};
-  double xu[2] = {  1., 1.};
+  double xu[2] = { +1., 1.};
 
   hcubature(2, integrand, NULL, 2, xl, xu, MaxEvls, 0, TolVirt, ERROR_INDIVIDUAL, res, err);
   //printf(" res = %g + I %g    ... err = %g + I %g \n", res[0], res[1], err[0], err[1] );
@@ -206,7 +206,7 @@ double Triangle_T(o,k,A_,B_,C_,D_,E_,func)
   }
 
   double xl[2] = { -1., 0.};
-  double xu[2] = {  1., 1.};
+  double xu[2] = { +1., 1.};
 
   hcubature(2, integrand, NULL, 2, xl, xu, MaxEvls, 0, TolVirt, ERROR_INDIVIDUAL, res, err);
   //printf(" res = %g + I %g    ... err = %g + I %g \n", res[0], res[1], err[0], err[1] );
@@ -214,7 +214,7 @@ double Triangle_T(o,k,A_,B_,C_,D_,E_,func)
 }
 
 // TEST!
-double Triangle_0_new(o,k,A_,B_,C_,D_,E_,func)
+/*double Triangle_0_new(o,k,A_,B_,C_,D_,E_,func)
   double o,k;
   void *A_, *B_, *C_, *D_, *E_;
   double (*func)(double,double,double *,double *,double *,double *, double *,double complex *);
@@ -292,18 +292,7 @@ double Triangle_0_new(o,k,A_,B_,C_,D_,E_,func)
 /*--------------------------------------------------------------------*/
 // Vacuum functions
 
-/*double Li2(double x) { // Real part only, for x>1
-  double omx = 1.-x;
-  if (x<-1.)         return +Li2(1./omx)-log(omx)*log(-x)+.5*SQR(log(omx))-ZE2;
-  if (-1.<x && x<0.) return -Li2(-x/omx)-.5*SQR(log(omx));
-  if ( .5<x && x<1.) return -Li2(omx)-log(omx)*log(x)+ZE2;
-  if ( 1.<x && x<2.) return +Li2(-omx/x)-log(-omx)*log(x)+.5*SQR(log(x))+ZE2;
-  if (x>2.)          return -Li2(1./x)-.5*SQR(log(x))+.5*ZE2;
-
-  double tmp = 0.0, i = 1.0;
-  for (; i < 50.; i += 1.0) { tmp += pow(x,i)/SQR(i); }
-  return tmp;
-}//*/
+/* Polylog functions: */
 
 double GRID[16][2] = { // Gaussian-quadrature: 16-pt [-1,1]
                        {0.1894506104550685,-0.0950125098376374},
@@ -329,8 +318,8 @@ double complex Li2(double complex z) { // Osacar, Palacian & Palacios (1995)
   double r = cabs(z);
   double complex omz = 1.-z, res;
   //printf( " z = %g + I %g \n", z);
-  if (cabs(omz)<1e-8) return ZE2;
-  if        (r<.5) { // circle
+  if (cabs(omz)<1e-12) return ZE2;
+  if        (r<.5) { // circular region
     res = 0.;
     for (int i=1;i<30;i++) {
       res += cpow(z,i)/SQR(i*(i+1.)*(i+2.));
@@ -338,7 +327,7 @@ double complex Li2(double complex z) { // Osacar, Palacian & Palacios (1995)
     res *= 4.*SQR(z);
     res += 4.*z + 5.75*SQR(z) + 3.*(1.-SQR(z))*clog(omz);
     return res/(SQR(z)+4.*z+1.);
-  } else if (r<1.) { // crown
+  } else if (r<1.) { // crown region
     if (cabs(omz)<.5) {
       return - Li2(omz) - clog(z)*clog(omz) + ZE2;
     } else {
@@ -355,18 +344,20 @@ double complex Li2(double complex z) { // Osacar, Palacian & Palacios (1995)
   }
 }
 
-double complex R(double complex y0, double complex y1) {
+/* Appendix B -- t'Hooft, Veltman (1979): */
+
+double complex R(double complex y0, double complex y1) { // B.3
   double complex omy0 = 1.-y0, omy1 = 1.-y1, y1my0=y1-y0;
   //printf( " y0 = %g + I %g ... 1-y0 = %g + I %g \n", y0, omy0);
   double complex tmp = Li2(-omy1/y1my0) - Li2(y1/y1my0);
-  if ( (cabs(omy0)>1e-12) && (cabs(omy1)>1e-12) ) {tmp += +clog(omy0/y1my0)*clog(-omy1/y1my0);}
-  if ( (cabs(  y0)>1e-12) && (cabs(y1  )>1e-12) ) {tmp += -clog(-y0/y1my0)*clog(y1/y1my0);}
+  if ( (cabs(omy0)>1e-12) && (cabs(omy1)>1e-12) ) {tmp += +clog(omy0/y1my0)*clog(-omy1/y1my0); }
+  if ( (cabs(  y0)>1e-12) && (cabs(y1  )>1e-12) ) {tmp += -clog(-y0/y1my0)*clog(y1/y1my0);     }
   //printf( " result = %g + I %g \n", tmp);
   return (tmp);
 }
 
 double complex S3(double complex y0,
-                  double complex a, double complex b, double complex c) {
+                  double complex a, double complex b, double complex c) { // B.1
   double complex D = SQR(b)-4.*a*c;
   double complex y1 = ( .5*(-b-csqrt(D))/a ),
                  y2 = ( .5*(-b+csqrt(D))/a );
@@ -376,53 +367,13 @@ double complex S3(double complex y0,
 }
 
 
-double L1(double M2) {
+/* B0 and C0 functions: */
+
+double L1(double M2) { // =  (4.33)
   return -M2*( log(fabs(SQR(mubar)/M2)) + 1. );
 }
 
-double L2_old(double M2a, double M2b, double M2d) {
-  double res[1], err[1];
-
-  //if (sqrt(M2d)>sqrt(M2a)+sqrt(M2b)) {
-  double complex lam_ABD = csqrt( lam(M2a,M2b,M2d) );
-
-    double x_plus  = fmin( fmax( .5*(M2b+M2d-M2a+creal(lam_ABD))/M2d, 0. ), 1.),
-           x_minus = fmin( fmax( .5*(M2b+M2d-M2a-creal(lam_ABD))/M2d, 0. ), 1.);
-
-    int integrand(unsigned dim,  const double *x, void *data_,
-                  unsigned fdim, double *val) {
-      double _X_ = x[0]*x_minus,
-             _Y_ = (1.-x[0])*x_minus + x[0]*x_plus,
-             _Z_ = (1.-x[0])*x_plus  + x[0];
-      double log1 = log(fabs( SQR(mubar)/(M2a*_X_+M2b*(1.-_X_)-M2d*_X_*(1.-_X_)) )),
-             log2 = log(fabs( SQR(mubar)/(M2a*_Y_+M2b*(1.-_Y_)-M2d*_Y_*(1.-_Y_)) )),
-             log3 = log(fabs( SQR(mubar)/(M2a*_Z_+M2b*(1.-_Z_)-M2d*_Z_*(1.-_Z_)) ));
-
-      val[0] = x_minus*log1 + (x_plus-x_minus)*log2 + (1.-x_plus)*log3;
-      return 0;
-    }//*/
-  /*} else {
-    int integrand(unsigned dim,  const double *x, void *data_,
-                  unsigned fdim, double *val) {
-      double _X_ = x[0];
-      val[0] = log(fabs( SQR(mubar)/(M2a*_X_+M2b*(1.-_X_)-M2d*_X_*(1.-_X_)) ));
-      return 0;
-    }//*/
-  //}
-
-  double xl[1] = { 0. };
-  double xu[1] = { 1. };
-
-  hcubature(1, integrand, NULL, 1, xl, xu, MaxEvls, 1e-10, 0, ERROR_INDIVIDUAL, res, err);
-  return -res[0];
-  /*  double complex x1 = .5*(M2b+M2d-M2a+creal(lam_ABD))/M2d,
-                   x2 = .5*(M2b+M2d-M2a-creal(lam_ABD))/M2d;
-  return - log(fabs(SQR(mubar)/M2d)) 
-    + creal( clog(1.-x1)-x1*clog((x1-1.)/x1)-1.)
-    + creal( clog(1.-x2)-x2*clog((x2-1.)/x2)-1.);//*/
-}
-
-double L2(double M2a, double M2b, double M2d) {
+double L2(double M2a, double M2b, double M2d) { // = (4.34)
   double res[1], err[1];
 
   double complex lam_ABD = csqrt( lam(M2a,M2b,M2d) );
@@ -434,33 +385,8 @@ double L2(double M2a, double M2b, double M2d) {
          + creal( clog(1.-x2)-x2*clog((x2-1.)/x2)-1.);//*/
 }
 
-
-double L3_new(double K2,
-          double M2a, double M2b, double M2c, double M2d, double M2e) {
-  double res[1], err[1];
-
-  int integrand(unsigned dim,  const double *x, void *data_,
-                unsigned fdim, double *val) {
-    double _Y_ = x[0];
-
-    double al  = SQR(_Y_)*M2d,
-           be  = _Y_*(M2a-M2b-M2d*_Y_+(M2e-K2)*(1.-_Y_)),
-           ga  = M2b*_Y_+M2c*(1.-_Y_)-M2e*_Y_*(1.-_Y_);
-
-    val[0] = _Y_*calA(al,be,ga);
-    return 0;
-  }
-
-  double xl[1] = { 0. };
-  double xu[1] = { 1. };
-
-  hcubature(1, integrand, NULL, 1, xl, xu, MaxEvls, 1e-10, 0, ERROR_INDIVIDUAL, res, err);
-  return res[0];
-}//*/
-
-
 double L3(double K2,
-          double M2a, double M2b, double M2c, double M2d, double M2e) {
+          double M2a, double M2b, double M2c, double M2d, double M2e) { // = (4.43)
   double res[1], err[1];
   double a = M2e, b = M2d, c = K2-M2d-M2e, d = M2b-M2c-M2e, e = M2a-M2b+M2e-K2, f = M2c;
   double complex lam_DE = csqrt( lam(M2d,M2e,K2) );
@@ -488,8 +414,6 @@ double L3(double K2,
   //printf(" res = %g \n", tmp/(c+2.*b*al) );
   return creal( tmp/(c+2.*b*al) );
 }//*/
-
-
 
 double Bubble_0(o,k,A_,B_,C_,D_,c)
   double o,k;
@@ -522,7 +446,7 @@ double Bubble_0(o,k,A_,B_,C_,D_,c)
   int integrand(unsigned dim,  const double *x, void *data_,
                 unsigned fdim, double *val) {
 
-    double _X_ = x[0];// integration variables
+    double _X_ = x[0]; // integration variables
 
     double alpha = 4., _X2_ = tanh(alpha*_X_)/tanh(alpha);
 
@@ -651,7 +575,7 @@ double Triangle_0(o,k,A_,B_,C_,D_,E_,c)
   }
 
   double xl[2] = { -1. };
-  double xu[2] = {  1. };
+  double xu[2] = { +1. };
 
   hcubature(2, integrand, NULL, 1, xl, xu, MaxEvls, TolVirt, 0, ERROR_INDIVIDUAL, res, err);
   return res[0];

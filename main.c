@@ -12,10 +12,10 @@
 
 #define SQR(x) ((x)*(x))
 #define SGN(x) (double) ((x>0)-(x<0))
-#define OOFP 0.079577471545947667884441881686
-#define ZE2  1.644934066848226436472415166646
+#define OOFP 0.079577471545947667884441881686l
+#define ZE2  1.644934066848226436472415166646l
 
-double mubar = 6.283185307179586476925286766559; // (renorm. scale)/T
+double long mubar = 6.283185307179586476925286766559; // (renorm. scale)/T
 
 char E = 'U';
 
