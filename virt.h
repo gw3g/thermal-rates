@@ -335,7 +335,7 @@ double complex Li2(double complex z) { // Osacar, Palacian & Palacios (1995)
       double ai, ti;
       for (int i=0;i<16;i++) {
         ai = .5*GRID[i][0]; ti = .5*(GRID[i][1]+1.);
-        res += ai*clog(1.-z*ti)/ti;
+        res -= ai*clog(1.-z*ti)/ti; // Li2(z) = - \int_0^1 dt log(1-zt)/t
       }
       return res;
     }
@@ -347,13 +347,18 @@ double complex Li2(double complex z) { // Osacar, Palacian & Palacios (1995)
 /* Appendix B -- t'Hooft, Veltman (1979): */
 
 double complex R(double complex y0, double complex y1) { // B.3
-  double complex omy0 = 1.-y0, omy1 = 1.-y1, y1my0=y1-y0;
-  //printf( " y0 = %g + I %g ... 1-y0 = %g + I %g \n", y0, omy0);
+  double complex omy0 = 1.-y0, omy1 = 1.-y1, y1my0 = y1-y0;
   double complex tmp = Li2(-omy1/y1my0) - Li2(y1/y1my0);
-  if ( (cabs(omy0)>1e-12) && (cabs(omy1)>1e-12) ) {tmp += +clog(omy0/y1my0)*clog(-omy1/y1my0); }
-  if ( (cabs(  y0)>1e-12) && (cabs(y1  )>1e-12) ) {tmp += -clog(-y0/y1my0)*clog(y1/y1my0);     }
+  if ( (cabs(omy0)>1e-12) && (cabs(omy1)>1e-12) ) tmp += +clog(omy0/y1my0)*clog(-omy1/y1my0) ;
+  if ( (cabs(  y0)>1e-12) && (cabs(y1  )>1e-12) ) tmp += -clog(-y0/y1my0)*clog(y1/y1my0) ;
   //printf( " result = %g + I %g \n", tmp);
   return (tmp);
+}
+
+double complex eta(double complex a, double complex b) { // 2.4
+  double ima = cimag(a), imb = cimag(b), imab = cimag(a*b);
+  return 2.*M_PI*I*( THE(-ima)*THE(-imb)*THE(+imab) 
+                   - THE(+ima)*THE(+imb)*THE(-imab) );
 }
 
 double complex S3(double complex y0,
@@ -362,8 +367,10 @@ double complex S3(double complex y0,
   double complex y1 = ( .5*(-b-csqrt(D))/a ),
                  y2 = ( .5*(-b+csqrt(D))/a );
 
-  //printf( " y1 = %g + I %g ... y2 = %g + I %g \n", y1, y2);
-  return ( R(y0,y1) + R(y0,y2) );
+  return ( R(y0,y1) + R(y0,y2) 
+         - ( eta(-y1,-y2) - eta(y0-y1,y0-y2) - eta(a,1./a) )*clog(1.-1./y0) 
+         // eta part not necessary??
+      );
 }
 
 
@@ -374,6 +381,7 @@ double L1(double M2) { // =  (4.33)
 }
 
 double L2(double M2a, double M2b, double M2d) { // = (4.34)
+
   double res[1], err[1];
 
   double complex lam_ABD = csqrt( lam(M2a,M2b,M2d) );
@@ -387,6 +395,7 @@ double L2(double M2a, double M2b, double M2d) { // = (4.34)
 
 double L3(double K2,
           double M2a, double M2b, double M2c, double M2d, double M2e) { // = (4.43)
+
   double res[1], err[1];
   double a = M2e, b = M2d, c = K2-M2d-M2e, d = M2b-M2c-M2e, e = M2a-M2b+M2e-K2, f = M2c;
   double complex lam_DE = csqrt( lam(M2d,M2e,K2) );
@@ -395,8 +404,7 @@ double L3(double K2,
   double complex al,
                  al1 = .5*( M2d+M2e-K2 + lam_DE )/M2d ,
                  al2 = .5*( M2d+M2e-K2 - lam_DE )/M2d ;
-  //printf(" al1 = %g + I %g \n", al );
-  //printf(" al2 = %g + I %g \n", al2 );
+
   if ( cabs(al1) > cabs(al2) ) { al = al1; }
   else { al = al2; }
 
@@ -405,13 +413,8 @@ double L3(double K2,
                  y2 = y0/(1.-al),
                  y3 = -y0/al;
 
-  //printf(" y0 = %g + I %g \n", y0 );
-  //printf(" y1 = %g + I %g \n", y1 );
-  //printf(" y2 = %g + I %g \n", y2 );
-  //printf(" y3 = %g + I %g \n", y3 );
+  double complex tmp = + S3(y1,b,c+e,a+d+f) - S3(y2,a+b+c,d+e,f) + S3(y3,a,d,f) ;
 
-  double complex tmp = + S3(y1,b,c+e,a+d+f) - S3(y2,a+b+c,d+e,f) + S3(y3,a,d,f);
-  //printf(" res = %g \n", tmp/(c+2.*b*al) );
   return creal( tmp/(c+2.*b*al) );
 }//*/
 

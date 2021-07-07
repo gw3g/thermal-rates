@@ -12,6 +12,8 @@
 
 #define SQR(x) ((x)*(x))
 #define SGN(x) (double) ((x>0)-(x<0))
+#define THE(x) (double) (x>0)
+
 #define OOFP 0.079577471545947667884441881686l
 #define ZE2  1.644934066848226436472415166646l
 
@@ -42,10 +44,10 @@ int main () {
   //double c_[4] = {.1,.3,.001,.003};
   //double complex test = calG(1.+I*1e-5, .2, 3, c_);
   //printf("test = %g + I %g \n\n", test);
-  E='U';
+  E='K';
   //hadron_scan(.2,.5); // to scan over m_q
   M_scan(8.,.1,.01,1.);
-  //M_scan2(8.,.1,.01,0.4);
+  //M_scan2(1.,.1,.01,0.4);
   //check_ML(3.,0.96875,.1,.01,1.);
   //check_ML(.3,0.4,.1,.01,1.);
   //rho_j_scan1();
