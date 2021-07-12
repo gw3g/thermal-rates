@@ -44,7 +44,7 @@ int main () {
   //double c_[4] = {.1,.3,.001,.003};
   //double complex test = calG(1.+I*1e-5, .2, 3, c_);
   //printf("test = %g + I %g \n\n", test);
-  E='K';
+  E='U';
   //hadron_scan(.2,.5); // to scan over m_q
   M_scan(8.,.1,.01,1.);
   //M_scan2(1.,.1,.01,0.4);
